@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -9,17 +10,17 @@ module.exports = {
     artifacts: "./artifacts"
   },
   networks: {
-    // Avalanche C-Chain Mainnet - for future deployment
+    // Avalanche C-Chain Mainnet
     avalanche: {
       url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,
-      // accounts: [process.env.PRIVATE_KEY] // Uncomment when deploying
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     },
-    // Avalanche Fuji Testnet - for testing
+    // Avalanche Fuji Testnet
     fuji: {
       url: "https://api.avax-test.network/ext/bc/C/rpc",
       chainId: 43113,
-      // accounts: [process.env.PRIVATE_KEY] // Uncomment when deploying
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     }
   }
 };
