@@ -22,7 +22,11 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
       if (!result.success && result.status === 402) {
         // Payment required - show payment flow
         if (result.error.metering) {
-          onPaymentRequired(result.error.metering as MeteringInfo);
+          const meteringInfo: MeteringInfo = {
+            ...(result.error.metering as MeteringInfo),
+            meterId: result.error.meterId || "payroll_execute",
+          };
+          onPaymentRequired(meteringInfo);
         }
       } else if (!result.success) {
         setError(result.error.message || "Failed to execute payroll");
@@ -118,6 +122,28 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
             <h3>Smart Contracts</h3>
             <p>SnowRailTreasury on Avalanche C-Chain</p>
           </div>
+        </div>
+      </section>
+
+      {/* Contract Test Section */}
+      <section className="action-section" style={{ marginTop: "2rem" }}>
+        <div className="card action-card">
+          <div className="action-header">
+            <div className="action-icon">🧪</div>
+            <div>
+              <h2>Contract Test</h2>
+              <p>Test Treasury contract operations through the agent with facilitator validation</p>
+            </div>
+          </div>
+          <button
+            className="btn btn-secondary btn-large"
+            onClick={() => {
+              window.location.hash = "#contract-test";
+            }}
+          >
+            <span>🧪</span>
+            Run Contract Test
+          </button>
         </div>
       </section>
     </div>
