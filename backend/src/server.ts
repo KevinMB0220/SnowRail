@@ -14,6 +14,14 @@ import {
   TaskState,
 } from "./x402Types.js";
 import { registerPayrollRoutes } from "./api/payrollRoutes.js";
+import {
+  getTreasuryBalance,
+  testContract,
+  initializeTreasuryController,
+} from "./api/treasury.controller.js";
+import { createFacilitatorRouter } from "./x402/facilitatorServer.js";
+import { x402Protect } from "./x402/middleware.js";
+import { config } from "./config/env.js";
 
 // Load environment variables
 dotenv.config();
@@ -24,7 +32,7 @@ app.use(express.json());
 // Configuration
 const PORT = process.env.PORT || 3000;
 const PAY_TO_ADDRESS = process.env.PAY_TO_ADDRESS;
-const NETWORK = process.env.NETWORK || 'base-sepolia';
+const NETWORK = config.network; // Use config.network which maps "fuji" to "avalanche-fuji"
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const FACILITATOR_URL = process.env.FACILITATOR_URL;
 const FACILITATOR_API_KEY = process.env.FACILITATOR_API_KEY;
@@ -161,6 +169,9 @@ const merchantOptions: MerchantExecutorOptions = {
 
 const merchantExecutor = new MerchantExecutor(merchantOptions);
 
+// Initialize treasury controller with agent and executor
+initializeTreasuryController(exampleService, merchantExecutor);
+
 if (settlementMode === 'direct') {
   console.log('🧩 Using local settlement (direct EIP-3009 via RPC)');
   if (RPC_URL) {
@@ -181,6 +192,14 @@ console.log("💵 Price per request: $0.10 USDC");
 
 // Register SnowRail payroll API (x402-protected) under /api
 registerPayrollRoutes(app);
+
+// Register Treasury API routes
+app.get("/api/treasury/balance", getTreasuryBalance);
+app.post("/api/treasury/test", x402Protect("contract_test"), testContract);
+
+// Register facilitator routes (integrated in same server)
+// Mount facilitator endpoints under /facilitator prefix
+app.use("/facilitator", createFacilitatorRouter());
 
 /**
  * Health check endpoint
@@ -288,8 +307,13 @@ app.post('/process', async (req, res) => {
       });
     }
 
+    // Extract agent ID from message metadata for tracking
+    const agentId = message.metadata?.['agent.id'] || contextId || task.id;
+    console.log(`\n🤖 Processing request for agent: ${agentId}`);
+
     // Verify the payment signature and authorization details (amount, recipient, timing) against the payment requirements.
     // This ensures the payment is cryptographically valid and matches what the merchant expects before processing the request.
+    console.log(`🔍 Verifying payment for agent: ${agentId}`);
     const verifyResult = await merchantExecutor.verifyPayment(paymentPayload);
 
     if (!verifyResult.isValid) {
@@ -340,15 +364,31 @@ app.post('/process', async (req, res) => {
     // Settle the payment on-chain by executing the transferWithAuthorization transaction.
     // This submits the signed authorization to the blockchain, transferring USDC from the payer
     // to the merchant's wallet. Returns settlement result with transaction hash and status.
+    console.log(`💰 Settling payment for agent: ${agentId}`);
     const settlement = await merchantExecutor.settlePayment(paymentPayload);
+    
+    // Log transaction details for agent tracking
+    if (settlement.success && settlement.transaction) {
+      console.log(`✅ Transaction generated for agent ${agentId}:`);
+      console.log(`   Transaction Hash: ${settlement.transaction}`);
+      console.log(`   Network: ${settlement.network}`);
+      console.log(`   Payer: ${settlement.payer || 'N/A'}`);
+    } else {
+      console.log(`❌ Settlement failed for agent ${agentId}: ${settlement.errorReason || 'Unknown error'}`);
+    }
 
     // Update the task metadata with the payment status and settlement result.
     // This includes the transaction hash (if successful) and any error reason (if failed).
     task.metadata = {
       ...(task.metadata || {}),
+      'agent.id': agentId, // Track agent ID in metadata
       'x402.payment.status': settlement.success ? 'payment-completed' : 'payment-failed',
       ...(settlement.transaction
-        ? { 'x402.payment.receipts': [settlement] }
+        ? { 
+            'x402.payment.receipts': [settlement],
+            'x402.payment.transaction': settlement.transaction,
+            'x402.payment.network': settlement.network,
+          }
         : {}),
       ...(settlement.errorReason
         ? { 'x402.payment.error': settlement.errorReason }
@@ -374,6 +414,50 @@ app.post('/process', async (req, res) => {
     console.error('❌ Error processing request:', error);
 
     return res.status(500).json({
+      error: error.message || 'Internal server error',
+    });
+  }
+});
+
+/**
+ * Endpoint to validate agent transactions
+ * GET /validate-agent/:agentId
+ * Validates that an agent has:
+ * 1. Called the contract (through facilitator)
+ * 2. Generated a transaction
+ * 3. Been validated by the facilitator
+ */
+app.get('/validate-agent/:agentId', async (req, res) => {
+  try {
+    const agentId = req.params.agentId;
+    console.log(`\n🔍 Validating agent: ${agentId}`);
+
+    // This is a placeholder - in production, you'd query a database
+    // or check logs for transactions associated with this agent ID
+    // For now, we'll return validation instructions
+
+    const validationResult = {
+      agentId,
+      timestamp: new Date().toISOString(),
+      validation: {
+        facilitatorHealth: 'Check facilitator /health endpoint',
+        contractCall: 'Check transaction logs for agent ID',
+        transactionGenerated: 'Check settlement receipts in task metadata',
+        facilitatorValidation: 'Check facilitator /verify endpoint logs',
+      },
+      instructions: [
+        '1. Check facilitator health: GET /facilitator/health',
+        '2. Look for transactions in task metadata with agent ID',
+        '3. Verify transaction hash on blockchain explorer',
+        '4. Check facilitator validation logs',
+      ],
+      note: 'Use the validate-agent-transaction.js script for automated validation',
+    };
+
+    res.json(validationResult);
+  } catch (error: any) {
+    console.error('❌ Error validating agent:', error);
+    res.status(500).json({
       error: error.message || 'Internal server error',
     });
   }
@@ -417,5 +501,12 @@ app.listen(PORT, () => {
   console.log(`\n✅ Server running on http://localhost:${PORT}`);
   console.log(`📖 Health check: http://localhost:${PORT}/health`);
   console.log(`🧪 Test endpoint: POST http://localhost:${PORT}/test`);
-  console.log(`🚀 Main endpoint: POST http://localhost:${PORT}/process\n`);
+  console.log(`🚀 Main endpoint: POST http://localhost:${PORT}/process`);
+  console.log(`🔍 Validate agent: GET http://localhost:${PORT}/validate-agent/:agentId`);
+  console.log(`🧪 Contract test: POST http://localhost:${PORT}/api/treasury/test`);
+  console.log(`💳 Facilitator: http://localhost:${PORT}/facilitator`);
+  console.log(`   - Health: http://localhost:${PORT}/facilitator/health`);
+  console.log(`   - Validate: POST http://localhost:${PORT}/facilitator/validate`);
+  console.log(`   - Verify: POST http://localhost:${PORT}/facilitator/verify`);
+  console.log(`   - Settle: POST http://localhost:${PORT}/facilitator/settle\n`);
 });
