@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Dashboard from "./components/Dashboard";
 import PaymentFlow from "./components/PaymentFlow";
 import PayrollDetail from "./components/PayrollDetail";
+import ContractTest from "./components/ContractTest";
 import "./App.css";
 
 // App view states
 type ViewState = 
   | { view: "dashboard" }
   | { view: "payment-flow"; metering: MeteringInfo }
-  | { view: "payroll-detail"; payrollId: string };
+  | { view: "payroll-detail"; payrollId: string }
+  | { view: "contract-test" };
 
 // Metering info from 402 response
 export type MeteringInfo = {
@@ -17,6 +19,7 @@ export type MeteringInfo = {
   chain: string;
   resource: string;
   description?: string;
+  meterId?: string;
 };
 
 // Payroll data type
@@ -37,7 +40,29 @@ export type PaymentData = {
 };
 
 function App() {
-  const [state, setState] = useState<ViewState>({ view: "dashboard" });
+  // Check URL hash for contract-test view
+  const getInitialState = (): ViewState => {
+    if (window.location.hash === "#contract-test") {
+      return { view: "contract-test" };
+    }
+    return { view: "dashboard" };
+  };
+
+  const [state, setState] = useState<ViewState>(getInitialState());
+
+  // Listen for hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === "#contract-test") {
+        setState({ view: "contract-test" });
+      } else if (window.location.hash === "" || window.location.hash === "#dashboard") {
+        setState({ view: "dashboard" });
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Handle 402 response - show payment flow
   const handlePaymentRequired = (metering: MeteringInfo) => {
@@ -81,6 +106,7 @@ function App() {
           {state.view === "payment-flow" && (
             <PaymentFlow
               metering={state.metering}
+              meterId={state.metering.meterId}
               onSuccess={handlePayrollSuccess}
               onCancel={handleBack}
             />
@@ -90,6 +116,9 @@ function App() {
               payrollId={state.payrollId}
               onBack={handleBack}
             />
+          )}
+          {state.view === "contract-test" && (
+            <ContractTest onBack={handleBack} />
           )}
         </div>
       </main>
