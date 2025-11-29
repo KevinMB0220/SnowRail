@@ -9,7 +9,7 @@ import { startFacilitatorServer } from "./x402/facilitatorServer.js";
 import { config } from "./config/env.js";
 import { logger } from "./utils/logger.js";
 
-const FACILITATOR_PORT = parseInt(process.env.FACILITATOR_PORT || "3001", 10);
+const FACILITATOR_PORT = parseInt(process.env.FACILITATOR_PORT || "3002", 10);
 
 async function main() {
   logger.info("Starting x402 Facilitator Server...");
