@@ -1,9 +1,9 @@
 import { ethers, Contract, Wallet, JsonRpcProvider } from "ethers";
-import { config } from "./env";
-import { getCurrentNetworkConfig } from "./networkConfig";
+import { config } from "./env.js";
+import { getCurrentNetworkConfig } from "./networkConfig.js";
 
 // Minimal ABI for SnowRailTreasury contract
-const TREASURY_ABI = [
+export const TREASURY_ABI = [
   "function owner() view returns (address)",
   "function router() view returns (address)",
   "function swapAllowances(address, address) view returns (uint256)",
@@ -17,7 +17,7 @@ const TREASURY_ABI = [
   "event PaymentFailed(address indexed payer, address indexed payee, uint256 amount, address token, string reason)",
   "event SwapAuthorized(address indexed owner, address indexed fromToken, address indexed toToken, uint256 maxAmount)",
   "event SwapExecuted(address indexed swapper, address indexed fromToken, address indexed toToken, uint256 amount)",
-];
+] as const;
 
 let provider: JsonRpcProvider | null = null;
 let signer: Wallet | null = null;
@@ -38,7 +38,7 @@ export function getSigner(): Wallet {
     if (!config.privateKey) {
       throw new Error("PRIVATE_KEY not configured");
     }
-    signer = new ethers.Wallet(config.privateKey, getProvider());
+    signer = new Wallet(config.privateKey, getProvider());
   }
   return signer;
 }
@@ -49,10 +49,10 @@ export function getTreasuryContract(): Contract {
     if (!config.treasuryContractAddress) {
       throw new Error("TREASURY_CONTRACT_ADDRESS not configured");
     }
-    treasuryContract = new ethers.Contract(
+    treasuryContract = new Contract(
       config.treasuryContractAddress,
       TREASURY_ABI,
-      getSigner()
+      getSigner(),
     );
   }
   return treasuryContract;
@@ -63,12 +63,11 @@ export function getTreasuryContractReadOnly(): Contract {
   if (!config.treasuryContractAddress) {
     throw new Error("TREASURY_CONTRACT_ADDRESS not configured");
   }
-  return new ethers.Contract(
+  return new Contract(
     config.treasuryContractAddress,
     TREASURY_ABI,
-    getProvider()
+    getProvider(),
   );
 }
 
-export { TREASURY_ABI };
 
