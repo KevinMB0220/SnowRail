@@ -39,6 +39,14 @@ export const meters: Record<string, MeterConfig> = {
     description: "Execute a token swap through DEX",
     version: "8004-alpha",
   },
+  contract_test: {
+    price: "0.1",
+    asset: "USDC",
+    chain: "fuji", // Fuji testnet
+    resource: "contract_test",
+    description: "Test Treasury contract operations (requestPayment, getTokenBalance, authorizeSwap, etc.)",
+    version: "8004-alpha",
+  },
 };
 
 // Get meter by ID

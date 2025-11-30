@@ -33,9 +33,13 @@ export const config = {
   treasuryContractAddress: process.env.TREASURY_CONTRACT_ADDRESS || "",
   privateKey: process.env.PRIVATE_KEY || "",
 
-  // x402 facilitator (for future real integration)
+  // x402 facilitator URL
+  // If not set, defaults to integrated facilitator on same server
   x402FacilitatorUrl:
-    process.env.X402_FACILITATOR_URL || "https://facilitator.mock",
+    process.env.X402_FACILITATOR_URL ||
+    (process.env.PORT
+      ? `http://localhost:${process.env.PORT}/facilitator`
+      : "http://localhost:4000/facilitator"),
 
   // Rail API (mock in this MVP)
   railApiBaseUrl: process.env.RAIL_API_BASE_URL || "https://rail.mock",

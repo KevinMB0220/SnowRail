@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express, Request, Response, Router } from "express";
 import { ethers } from "ethers";
 import { config } from "../config/env.js";
 import { getCurrentNetworkConfig } from "../config/networkConfig.js";
@@ -51,11 +51,234 @@ interface SettleRequest {
 }
 
 /**
+ * Create facilitator router (for mounting in main server)
+ */
+export function createFacilitatorRouter(): Router {
+  const router = Router();
+  
+  // Health check endpoint
+  router.get("/health", (req: Request, res: Response) => {
+    res.json({
+      status: "healthy",
+      network: config.network,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Validate payment proof endpoint
+  router.post("/validate", async (req: Request, res: Response) => {
+    try {
+      const body: ValidationRequest = req.body;
+      const { proof, meterId, price, asset, chain } = body;
+
+      logger.info(`Validating payment proof for meter: ${meterId}`, {
+        meterId,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Get meter configuration
+      const meter = getMeter(meterId);
+      if (!meter) {
+        return res.status(400).json({
+          valid: false,
+          error: "METER_NOT_FOUND",
+          message: `Meter ${meterId} not found`,
+        });
+      }
+
+      // Use provided values or meter defaults
+      const expectedPrice = price || meter.price;
+      const expectedAsset = asset || meter.asset;
+      const expectedChain = chain || meter.chain;
+
+      // Parse proof (can be string or object)
+      let paymentProof: PaymentProof;
+      if (typeof proof === "string") {
+        try {
+          paymentProof = JSON.parse(proof);
+        } catch {
+          // If it's not JSON, treat as a simple token (for demo)
+          if (proof === "demo-token") {
+            return res.json({
+              valid: true,
+              payer: "0xDemoPayerAddress",
+              amount: expectedPrice,
+            });
+          }
+          return res.status(400).json({
+            valid: false,
+            error: "INVALID_PROOF_FORMAT",
+            message: "Proof must be valid JSON or payment proof object",
+          });
+        }
+      } else {
+        paymentProof = proof;
+      }
+
+      // Validate payment proof on-chain
+      const validationResult = await validatePaymentOnChain(
+        paymentProof,
+        expectedPrice,
+        expectedAsset,
+        expectedChain
+      );
+
+      if (validationResult.valid) {
+        logger.info(`Payment validated successfully`, {
+          payer: validationResult.payer,
+          amount: validationResult.amount,
+        });
+      } else {
+        logger.warn(`Payment validation failed`, {
+          error: validationResult.error,
+          message: validationResult.message,
+        });
+      }
+
+      res.json(validationResult);
+    } catch (error) {
+      logger.error("Error validating payment", error);
+      res.status(500).json({
+        valid: false,
+        error: "VALIDATION_ERROR",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Verify payment endpoint (for MerchantExecutor compatibility)
+  router.post("/verify", async (req: Request, res: Response) => {
+    try {
+      const body: VerifyRequest = req.body;
+      const { paymentPayload, paymentRequirements } = body;
+
+      logger.info("Verifying payment via facilitator");
+
+      // Extract payment information
+      const proof = paymentPayload?.authorization || paymentPayload;
+      const meterId = paymentRequirements?.resource || "payroll_execute";
+
+      const meter = getMeter(meterId);
+      if (!meter) {
+        return res.status(400).json({
+          valid: false,
+          error: "METER_NOT_FOUND",
+        });
+      }
+
+      // Validate the payment
+      const validationResult = await validatePaymentOnChain(
+        proof,
+        meter.price,
+        meter.asset,
+        meter.chain
+      );
+
+      if (validationResult.valid) {
+        res.json({
+          valid: true,
+          payer: validationResult.payer,
+          amount: validationResult.amount,
+        });
+      } else {
+        res.status(402).json({
+          valid: false,
+          error: validationResult.error,
+          message: validationResult.message,
+        });
+      }
+    } catch (error) {
+      logger.error("Error verifying payment", error);
+      res.status(500).json({
+        valid: false,
+        error: "VERIFICATION_ERROR",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Settle payment endpoint (execute on-chain)
+  router.post("/settle", async (req: Request, res: Response) => {
+    try {
+      const body: SettleRequest = req.body;
+      const { paymentPayload, paymentRequirements } = body;
+
+      logger.info("Settling payment via facilitator");
+
+      // Extract payment information
+      const proof = paymentPayload?.authorization || paymentPayload;
+      const meterId = paymentRequirements?.resource || "payroll_execute";
+
+      const meter = getMeter(meterId);
+      if (!meter) {
+        return res.status(400).json({
+          success: false,
+          error: "METER_NOT_FOUND",
+        });
+      }
+
+      // First verify the payment
+      const validationResult = await validatePaymentOnChain(
+        proof,
+        meter.price,
+        meter.asset,
+        meter.chain
+      );
+
+      if (!validationResult.valid) {
+        return res.status(402).json({
+          success: false,
+          error: validationResult.error,
+          message: validationResult.message,
+        });
+      }
+
+      // Execute settlement on-chain
+      const settlementResult = await settlePaymentOnChain(
+        proof,
+        meter.asset,
+        meter.chain
+      );
+
+      if (settlementResult.success) {
+        res.json({
+          success: true,
+          transactionHash: settlementResult.transactionHash,
+          payer: validationResult.payer,
+          amount: validationResult.amount,
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: settlementResult.error,
+          message: settlementResult.message,
+        });
+      }
+    } catch (error) {
+      logger.error("Error settling payment", error);
+      res.status(500).json({
+        success: false,
+        error: "SETTLEMENT_ERROR",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  return router;
+}
+
+/**
  * Create and configure the facilitator Express server
+ * Can be used as standalone server or mounted as middleware
  */
 export function createFacilitatorServer(): Express {
   const app = express();
   app.use(express.json());
+  
+  // Mount the router
+  app.use("/", createFacilitatorRouter());
+  
+  return app;
 
   // Health check endpoint
   app.get("/health", (req: Request, res: Response) => {
@@ -417,6 +640,9 @@ async function settlePaymentOnChain(
     logger.info(`Payment settled on-chain`, {
       transactionHash: receipt.hash,
       blockNumber: receipt.blockNumber,
+      assetAddress,
+      chain,
+      timestamp: new Date().toISOString(),
     });
 
     return {
@@ -436,7 +662,7 @@ async function settlePaymentOnChain(
 /**
  * Start the facilitator server
  */
-export function startFacilitatorServer(port: number = 3001): void {
+export function startFacilitatorServer(port: number = 3002): void {
   const app = createFacilitatorServer();
 
   app.listen(port, () => {
