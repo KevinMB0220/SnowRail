@@ -14,6 +14,7 @@ import {
   TaskState,
 } from "./x402Types.js";
 import { registerPayrollRoutes } from "./api/payrollRoutes.js";
+import { registerPaymentRoutes } from "./api/paymentRoutes.js";
 import {
   getTreasuryBalance,
   testContract,
@@ -192,6 +193,9 @@ console.log("💵 Price per request: $0.10 USDC");
 
 // Register SnowRail payroll API (x402-protected) under /api
 registerPayrollRoutes(app);
+
+// Register integrated payment routes (replaces old agent/facilitator test endpoints)
+registerPaymentRoutes(app);
 
 // Register Treasury API routes
 app.get("/api/treasury/balance", getTreasuryBalance);
