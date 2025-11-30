@@ -41,9 +41,14 @@ export const config = {
       ? `http://localhost:${process.env.PORT}/facilitator`
       : "http://localhost:4000/facilitator"),
 
-  // Rail API (mock in this MVP)
-  railApiBaseUrl: process.env.RAIL_API_BASE_URL || "https://rail.mock",
-  railApiKey: process.env.RAIL_API_KEY || "rail-mock-key",
+  // Rail API Configuration
+  railApiBaseUrl: process.env.RAIL_API_BASE_URL || "https://sandbox.layer2financial.com/api",
+  railAuthUrl: process.env.RAIL_AUTH_URL || "https://auth.layer2financial.com/oauth2/ausbdqlx69rH6OjWd696/v1/token",
+  railClientId: process.env.RAIL_CLIENT_ID || "",
+  railClientSecret: process.env.RAIL_CLIENT_SECRET || "",
+  railSigningKey: process.env.RAIL_SIGNING_KEY || "",
+  // Legacy support (will be replaced by OAuth2 token)
+  railApiKey: process.env.RAIL_API_KEY || "",
 } as const;
 
 export type Config = typeof config;
