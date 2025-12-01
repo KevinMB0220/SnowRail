@@ -30,6 +30,43 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
+const defaultCorsOrigins = [
+  "http://localhost:3000",
+  "https://snowrail.vercel.app",
+  "https://snowrail-production.up.railway.app",
+];
+
+const allowedOrigins = new Set(
+  (process.env.CORS_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .concat(defaultCorsOrigins),
+);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.has(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Vary", "Origin");
+  }
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, X-PAYMENT",
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  );
+
+  if (req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+
+  next();
+});
+
 // Configuration
 const PORT = process.env.PORT || 3000;
 const PAY_TO_ADDRESS = process.env.PAY_TO_ADDRESS;
