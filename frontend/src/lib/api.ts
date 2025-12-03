@@ -12,6 +12,7 @@ export type MeteringInfo = {
   resource: string;
   description?: string;
   version: string;
+  meterId?: string;
 };
 
 export type PayrollResponse = {
