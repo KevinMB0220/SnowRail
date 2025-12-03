@@ -94,17 +94,18 @@ export function createFacilitatorRouter(): Router {
       // Parse proof (can be string or object)
       let paymentProof: PaymentProof;
       if (typeof proof === "string") {
+        // Check for demo token first before trying to parse JSON
+        if (proof === "demo-token") {
+          return res.json({
+            valid: true,
+            payer: "0xDemoPayerAddress",
+            amount: expectedPrice,
+          });
+        }
+        
         try {
           paymentProof = JSON.parse(proof);
         } catch {
-          // If it's not JSON, treat as a simple token (for demo)
-          if (proof === "demo-token") {
-            return res.json({
-              valid: true,
-              payer: "0xDemoPayerAddress",
-              amount: expectedPrice,
-            });
-          }
           return res.status(400).json({
             valid: false,
             error: "INVALID_PROOF_FORMAT",
@@ -315,17 +316,18 @@ export function createFacilitatorServer(): Express {
       // Parse proof (can be string or object)
       let paymentProof: PaymentProof;
       if (typeof proof === "string") {
+        // Check for demo token first before trying to parse JSON
+        if (proof === "demo-token") {
+          return res.json({
+            valid: true,
+            payer: "0xDemoPayerAddress",
+            amount: expectedPrice,
+          });
+        }
+        
         try {
           paymentProof = JSON.parse(proof);
         } catch {
-          // If it's not JSON, treat as a simple token (for demo)
-          if (proof === "demo-token") {
-            return res.json({
-              valid: true,
-              payer: "0xDemoPayerAddress",
-              amount: expectedPrice,
-            });
-          }
           return res.status(400).json({
             valid: false,
             error: "INVALID_PROOF_FORMAT",
