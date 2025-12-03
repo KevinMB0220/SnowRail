@@ -33,6 +33,10 @@ export const config = {
   treasuryContractAddress: process.env.TREASURY_CONTRACT_ADDRESS || "",
   privateKey: process.env.PRIVATE_KEY || "",
 
+  // Thirdweb configuration
+  thirdwebSecretKey: process.env.THIRDWEB_SECRET_KEY || "",
+  serverWalletAddress: process.env.SERVER_WALLET_ADDRESS || "",
+
   // x402 facilitator URL
   // If not set, defaults to integrated facilitator on same server
   x402FacilitatorUrl:
