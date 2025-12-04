@@ -4,6 +4,7 @@ import PaymentFlow from "./components/PaymentFlow";
 import PayrollDetail from "./components/PayrollDetail";
 import PaymentForm from "./components/PaymentForm";
 import ContractTest from "./components/ContractTest";
+import { AgentIdentity } from "./components/AgentIdentity";
 import { ParticleBackground } from "./components/ParticleBackground";
 import "./App.css";
 import type { MeteringInfo as ApiMeteringInfo } from "./lib/api";
@@ -14,7 +15,8 @@ type ViewState =
   | { view: "payment-flow"; metering: MeteringInfo }
   | { view: "payroll-detail"; payrollId: string }
   | { view: "payment-form" }
-  | { view: "contract-test" };
+  | { view: "contract-test" }
+  | { view: "agent-identity" };
 
 // Metering info from 402 response (extends API shape with optional meterId)
 export type MeteringInfo = ApiMeteringInfo & {
@@ -46,6 +48,8 @@ function App() {
       return { view: "payment-form" };
     } else if (window.location.hash === "#contract-test") {
       return { view: "contract-test" };
+    } else if (window.location.hash === "#agent-identity") {
+      return { view: "agent-identity" };
     }
     return { view: "dashboard" };
   };
@@ -59,6 +63,8 @@ function App() {
         setState({ view: "payment-form" });
       } else if (window.location.hash === "#contract-test") {
         setState({ view: "contract-test" });
+      } else if (window.location.hash === "#agent-identity") {
+        setState({ view: "agent-identity" });
       } else if (window.location.hash === "" || window.location.hash === "#dashboard") {
         setState({ view: "dashboard" });
       }
@@ -133,6 +139,17 @@ function App() {
           )}
           {state.view === "contract-test" && (
             <ContractTest onBack={handleBack} />
+          )}
+          {state.view === "agent-identity" && (
+            <div>
+              <button
+                onClick={handleBack}
+                className="mb-6 flex items-center gap-2 text-teal-600 hover:text-teal-700 transition-colors"
+              >
+                ← Back to Dashboard
+              </button>
+              <AgentIdentity />
+            </div>
           )}
         </div>
       </main>

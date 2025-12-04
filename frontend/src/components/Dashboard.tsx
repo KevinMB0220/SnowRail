@@ -43,16 +43,15 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
       {/* Hero Section */}
       <section className="text-center py-16 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-sm font-medium mb-6">
-          <Zap size={14} />
-          <span>Powered by x402 Protocol</span>
+          <Sparkles size={14} />
+          <span>Sovereign Agent Stack • x402 + ERC-8004 + Arweave</span>
         </div>
         <h1 className="text-5xl font-bold tracking-tight text-teal-900 mb-6 leading-tight">
-          Global Payroll on
+          AI-Native Treasury on
           <span className="text-teal-600"> Avalanche</span>
         </h1>
         <p className="text-xl text-teal-700 mb-10 leading-relaxed">
-          Execute international payments to freelancers using stablecoins.
-          Seamless pay-per-use access powered by Smart Contracts.
+          Autonomous treasury orchestration for AI agents. Execute cross-border payroll with permanent audit trail.
         </p>
       </section>
 
@@ -157,28 +156,55 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
         </div>
       </div>
 
-      {/* Info Cards */}
+      {/* Sovereign Agent Stack Cards */}
       <section className="grid md:grid-cols-3 gap-6 mb-16">
         <div className="card p-6">
           <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-4" style={{color: '#0f766e'}}>
             <Shield size={20} />
           </div>
-          <h3 className="font-bold text-teal-900 mb-2">x402 Protocol</h3>
-          <p className="text-sm text-teal-700">HTTP 402 Payment Required standard for seamless API monetization.</p>
+          <h3 className="font-bold text-teal-900 mb-2">Payments & Metering</h3>
+          <p className="text-sm text-teal-700">x402 + ERC-8004 protocol for autonomous AI agent payments.</p>
         </div>
         <div className="card p-6">
           <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-4" style={{color: '#0f766e'}}>
-            <BarChart3 size={20} />
+            <Sparkles size={20} />
           </div>
-          <h3 className="font-bold text-teal-900 mb-2">8004 Metering</h3>
-          <p className="text-sm text-teal-700">Resource-based pricing with transparent costs per request.</p>
+          <h3 className="font-bold text-teal-900 mb-2">Agent Identity</h3>
+          <p className="text-sm text-teal-700">ERC-8004 identity card for agent-to-agent discovery.</p>
         </div>
         <div className="card p-6">
           <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-4" style={{color: '#0f766e'}}>
             <Box size={20} />
           </div>
-          <h3 className="font-bold text-teal-900 mb-2">Smart Contracts</h3>
-          <p className="text-sm text-teal-700">SnowRailTreasury contract deployed on Avalanche C-Chain.</p>
+          <h3 className="font-bold text-teal-900 mb-2">Permanent Storage</h3>
+          <p className="text-sm text-teal-700">Arweave receipts - immutable audit trail forever.</p>
+        </div>
+      </section>
+
+      {/* Agent Identity Section - Highlighted */}
+      <section className="card p-8 relative overflow-hidden mb-8" style={{background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)'}}>
+        <div className="absolute top-0 right-0 p-16 bg-teal-400 rounded-full blur-3xl opacity-10 -mr-10 -mt-10"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-white/10 rounded-xl text-white shrink-0">
+              <Sparkles size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-1">🤖 Agent Activity & Identity</h2>
+              <p className="text-teal-100">View real payroll transactions with Arweave receipts, agent identity (ERC-8004), and live statistics.</p>
+            </div>
+          </div>
+          
+          <button
+            className="py-3 px-6 bg-white text-teal-900 hover:bg-teal-50 rounded-xl font-medium transition-colors flex items-center gap-2 whitespace-nowrap shadow-lg"
+            onClick={() => {
+              window.location.hash = "#agent-identity";
+            }}
+          >
+            View Activity
+            <ArrowRight size={16} />
+          </button>
         </div>
       </section>
 
@@ -213,11 +239,11 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
       <section className="mb-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-teal-900 mb-4">
-            Blockchain Payments Made Simple
+            Built for Autonomous AI Agents
           </h2>
           <p className="text-lg text-teal-700 max-w-3xl mx-auto leading-relaxed">
-            SnowRail bridges traditional banking and blockchain to enable instant global payments 
-            with stablecoins. No complexity, just results.
+            SnowRail implements the Sovereign Agent Stack - the first treasury system designed for AI agents 
+            to discover, pay, and execute cross-border payroll autonomously.
           </p>
         </div>
 
