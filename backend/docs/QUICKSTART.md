@@ -13,7 +13,7 @@ Get the x402 payment API running in 5 minutes!
 ### 1. Run the setup script
 
 ```bash
-./setup.sh
+./scripts/setup.sh
 ```
 
 This will:
@@ -70,7 +70,7 @@ You should see:
 In a new terminal:
 
 ```bash
-./test-request.sh
+./tests/scripts/test-request.sh
 ```
 
 You should see a `402 Payment Required` response with payment details!

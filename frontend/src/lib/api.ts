@@ -2,7 +2,13 @@
  * API Client for SnowRail Backend
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
+import type {
+  AuthResponse,
+  SignupRequest,
+  LoginRequest,
+} from "../types/auth-types.js";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:4000";
 
 // Types for API responses
 export type MeteringInfo = {
@@ -50,6 +56,14 @@ export type ApiError = {
   metering?: MeteringInfo;
   message?: string;
 };
+
+/**
+ * Get current authentication token from localStorage
+ */
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("snowrail_token");
+}
 
 /**
  * Execute payroll - may return 402 if payment required
@@ -433,5 +447,176 @@ export async function testContract(paymentToken?: string): Promise<{
         failed: number;
       };
     },
+  };
+}
+
+/**
+ * Authentication API functions
+ */
+
+/**
+ * Sign up a new user and company
+ * @param data - Signup request data
+ */
+export async function signup(
+  data: SignupRequest
+): Promise<{
+  success: true;
+  data: AuthResponse;
+} | {
+  success: false;
+  status: number;
+  error: { error: string; message: string };
+}> {
+  const response = await fetch(`${API_BASE}/auth/signup`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  let responseData;
+  try {
+    responseData = await response.json();
+  } catch (e) {
+    // If response is not JSON, return generic error
+    return {
+      success: false,
+      status: response.status,
+      error: {
+        error: "SIGNUP_FAILED",
+        message: "Failed to create account - invalid server response",
+      },
+    };
+  }
+
+  if (!response.ok) {
+    console.error("Signup error:", responseData);
+    const errorCode = responseData.error || "SIGNUP_FAILED";
+    const defaultMessage = responseData.message || "Failed to create account";
+    return {
+      success: false,
+      status: response.status,
+      error: {
+        error: errorCode,
+        message: defaultMessage,
+      },
+    };
+  }
+
+  return {
+    success: true,
+    data: responseData as AuthResponse,
+  };
+}
+
+/**
+ * Log in a user
+ * @param data - Login request data
+ */
+export async function login(
+  data: LoginRequest
+): Promise<{
+  success: true;
+  data: AuthResponse;
+} | {
+  success: false;
+  status: number;
+  error: { error: string; message: string };
+}> {
+  const response = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  let responseData;
+  try {
+    responseData = await response.json();
+  } catch (e) {
+    return {
+      success: false,
+      status: response.status,
+      error: {
+        error: "LOGIN_FAILED",
+        message: "Failed to sign in. Please check your connection",
+      },
+    };
+  }
+
+  if (!response.ok) {
+    return {
+      success: false,
+      status: response.status,
+      error: {
+        error: responseData.error || "LOGIN_FAILED",
+        message: responseData.message || "Failed to sign in",
+      },
+    };
+  }
+
+  return {
+    success: true,
+    data: responseData as AuthResponse,
+  };
+}
+
+/**
+ * Get current authenticated user
+ * Uses token from localStorage
+ */
+export async function getCurrentUser(): Promise<{
+  success: true;
+  data: AuthResponse;
+} | {
+  success: false;
+  status: number;
+  error: { error: string; message: string };
+}> {
+  const token = getAuthToken();
+
+  if (!token) {
+    return {
+      success: false,
+      status: 401,
+      error: {
+        error: "UNAUTHORIZED",
+        message: "No token found",
+      },
+    };
+  }
+
+  const response = await fetch(`${API_BASE}/auth/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    return {
+      success: false,
+      status: response.status,
+      error: {
+        error: responseData.error || "UNAUTHORIZED",
+        message: responseData.message || "Failed to fetch user",
+      },
+    };
+  }
+
+  // Transform response to match AuthResponse format
+  return {
+    success: true,
+    data: {
+      token, // Use existing token
+      user: responseData.user,
+      company: responseData.company,
+    } as AuthResponse,
   };
 }

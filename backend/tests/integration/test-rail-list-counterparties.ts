@@ -7,8 +7,8 @@
  */
 
 import dotenv from "dotenv";
-import { config } from "./src/config/env.js";
-import { getRailAccessToken } from "./src/services/railClient.js";
+import { config } from "../../src/config/env.js";
+import { getRailAccessToken } from "../../src/services/railClient.js";
 
 dotenv.config();
 

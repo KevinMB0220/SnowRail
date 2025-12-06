@@ -15,6 +15,7 @@ import {
 } from "./x402Types.js";
 import { registerPayrollRoutes } from "./api/payrollRoutes.js";
 import { registerPaymentRoutes } from "./api/paymentRoutes.js";
+import { registerAuthRoutes } from "./api/authRoutes.js";
 import {
   getTreasuryBalance,
   testContract,
@@ -54,7 +55,7 @@ app.use((req, res, next) => {
   }
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, X-PAYMENT",
+    "Origin, X-Requested-With, Content-Type, Accept, X-PAYMENT, Authorization",
   );
   res.header(
     "Access-Control-Allow-Methods",
@@ -229,6 +230,9 @@ console.log("🚀 x402 Payment API initialized");
 console.log(`💰 Payment address: ${PAY_TO_ADDRESS}`);
 console.log(`🌐 Network: ${resolvedNetwork}`);
 console.log("💵 Price per request: $0.10 USDC");
+
+// Register authentication routes
+registerAuthRoutes(app);
 
 // Register SnowRail payroll API (x402-protected) under /api
 registerPayrollRoutes(app);

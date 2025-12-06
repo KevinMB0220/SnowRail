@@ -13,8 +13,8 @@
     "dev": "tsc && node dist/server.js",
     "facilitator": "tsc && node dist/facilitator.js",
     "facilitator:dev": "tsc && node dist/facilitator.js",
-    "test": "npm run build && node dist/testClient.js",
-    "test:shell": "bash test-request.sh",
+    "test": "npm run build && node dist/tests/integration/testClient.js",
+    "test:shell": "bash tests/scripts/test-request.sh",
     "clean": "rm -rf dist",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:generate": "prisma generate"
@@ -31,14 +31,18 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "arweave": "^1.15.7",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "ethers": "^6.15.0",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "openai": "^4.78.0",
     "x402": "^0.7.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/lodash": "^4.17.21",
     "@types/node": "^24.6.2",
     "prisma": "^5.22.0",

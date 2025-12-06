@@ -43,7 +43,7 @@ fi
 # Run the test client
 echo "3️⃣ Running test client..."
 echo ""
-node dist/testClient.js
+node dist/tests/integration/testClient.js
 
 echo ""
 echo "✅ Test suite complete!"

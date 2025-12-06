@@ -22,7 +22,7 @@ if curl -s http://localhost:3001/health > /dev/null 2>&1; then
     FACILITATOR_PID=""
 else
     echo -e "${YELLOW}Starting facilitator...${NC}"
-    npx tsx src/facilitator.ts > /tmp/facilitator-test.log 2>&1 &
+    npx tsx src/x402/facilitatorServer.ts > /tmp/facilitator-test.log 2>&1 &
     FACILITATOR_PID=$!
     echo "Facilitator PID: $FACILITATOR_PID"
     sleep 3
@@ -70,7 +70,7 @@ echo -e "${GREEN}Running agent + facilitator test...${NC}"
 echo ""
 
 # Run the test
-node test-agent-facilitator.js
+node tests/e2e/test-agent-facilitator.js
 TEST_EXIT_CODE=$?
 
 # Cleanup

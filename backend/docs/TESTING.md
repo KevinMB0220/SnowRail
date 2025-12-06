@@ -15,7 +15,7 @@ curl http://localhost:3000/health
 Test the payment requirement flow:
 
 ```bash
-./test-request.sh
+./tests/scripts/test-request.sh
 ```
 
 This will:
@@ -33,7 +33,7 @@ npm test
 or
 
 ```bash
-./test-request.sh
+./tests/scripts/test-request.sh
 ```
 
 ## Test Scenarios
@@ -172,7 +172,7 @@ Because light attracts bugs! 🐛
 
 ## Test Client Configuration
 
-The test client (`src/testClient.ts`) supports:
+The test client (`tests/integration/testClient.ts`) supports:
 
 ### Environment Variables
 
@@ -192,7 +192,7 @@ API_URL=http://localhost:3000
 You can also use the test client programmatically:
 
 ```typescript
-import { TestClient } from './testClient.js';
+import { TestClient } from '../tests/integration/testClient.js';
 
 const client = new TestClient(privateKey);
 

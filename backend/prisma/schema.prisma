@@ -11,21 +11,25 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ============================================
+// OUTBOUND PAYMENTS (Payroll system)
+// ============================================
+
 // Payroll represents a batch of payments
 // Allowed status values: PENDING, ONCHAIN_PAID, RAIL_PROCESSING, PAID, FAILED
 model Payroll {
-  id        String    @id @default(cuid())
+  id        String            @id @default(cuid())
   total     Int
   currency  String
-  status    String    @default("PENDING")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  payments  Payment[]
+  status    String            @default("PENDING")
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  payments  OutboundPayment[]
 }
 
-// Individual payment within a payroll
+// Individual payment within a payroll (outbound - company pays others)
 // Allowed status values: PENDING, ONCHAIN_PAID, RAIL_PROCESSING, PAID, FAILED
-model Payment {
+model OutboundPayment {
   id        String   @id @default(cuid())
   payrollId String
   payroll   Payroll  @relation(fields: [payrollId], references: [id])
@@ -35,4 +39,109 @@ model Payment {
   recipient String?  // Wallet address or identifier
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// MVP MODELS (Treasury B2B system)
+// ============================================
+
+// User account for company access
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  passwordHash String
+  name      String?
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Company entity (B2B customer)
+model Company {
+  id            String             @id @default(cuid())
+  legalName     String
+  tradeName     String?
+  country       String             @default("US")
+  businessEmail String
+  kybLevel      Int                @default(0) // 0 = basic, 1 = verified
+  kybStatus     String             @default("none") // none, pending, approved, rejected
+  kybProvider   String?            // "sumsub"
+  kybVerifiedAt DateTime?
+  railAccountId String?
+  railStatus    String             @default("none") // none, pending, active
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  users         User[]
+  payments      Payment[]
+  balances      CompanyBalance[]
+  withdrawals   WithdrawalRequest[]
+  kybEvents     KybEvent[]
+  railEvents    RailEvent[]
+}
+
+// Inbound payment received via x402 (company receives payment)
+model Payment {
+  id              String   @id @default(cuid())
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  paymentIntentId String   @unique
+  externalRef     String?  // Optional: invoiceId / orderId from merchant
+  token           String   // e.g., "xUSDC"
+  amountToken     Decimal
+  amountUsd      Decimal
+  status          String   // PENDING_X402, CONFIRMED_ONCHAIN, FAILED
+  txHash          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Company balance per token
+model CompanyBalance {
+  companyId    String
+  company      Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  token        String
+  balanceToken Decimal
+  balanceUsd   Decimal
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@unique([companyId, token])
+  @@index([companyId])
+}
+
+// Withdrawal request from company to Rail
+model WithdrawalRequest {
+  id                 String   @id @default(cuid())
+  companyId          String
+  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  amountUsd          Decimal
+  tokenSource        String   // e.g., "xUSDC"
+  percentageRequested Decimal
+  railOperationId    String?
+  status             String   // PENDING, PROCESSING, SETTLED, FAILED
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// KYB event log (optional, for audit)
+model KybEvent {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  provider  String   // "sumsub"
+  eventType String   // created, callback, approved, rejected
+  rawPayload String  // JSON string
+  createdAt DateTime @default(now())
+}
+
+// Rail event log (optional, for audit)
+model RailEvent {
+  id              String   @id @default(cuid())
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  railOperationId String
+  eventType       String   // created, status_update
+  status          String   // PENDING, PROCESSING, SETTLED, FAILED
+  rawPayload      String   // JSON string
+  createdAt       DateTime @default(now())
 }

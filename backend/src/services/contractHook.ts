@@ -89,7 +89,7 @@ export async function requestPayrollPayments(payrollId: string): Promise<string[
       transactionHashes.push(txHash);
       
       // Update payment with transaction hash
-      await prisma.payment.update({
+      await prisma.outboundPayment.update({
         where: { id: payment.id },
         data: {
           status: PaymentStatus.ONCHAIN_REQUESTED,
@@ -177,7 +177,7 @@ export async function executePayrollPayments(payrollId: string): Promise<string[
       transactionHashes.push(txHash);
       
       // Update payment status
-      await prisma.payment.update({
+      await prisma.outboundPayment.update({
         where: { id: payment.id },
         data: {
           status: PaymentStatus.ONCHAIN_PAID,
@@ -189,7 +189,7 @@ export async function executePayrollPayments(payrollId: string): Promise<string[
       logger.error(`Failed to execute payment ${payment.id} on-chain`, error);
       
       // Mark payment as failed
-      await prisma.payment.update({
+      await prisma.outboundPayment.update({
         where: { id: payment.id },
         data: {
           status: PaymentStatus.FAILED,
@@ -199,7 +199,7 @@ export async function executePayrollPayments(payrollId: string): Promise<string[
   }
 
   // Update payroll status based on payment results
-  const payments = await prisma.payment.findMany({
+  const payments = await prisma.outboundPayment.findMany({
     where: { payrollId },
   });
 
@@ -257,7 +257,7 @@ export function startContractEventListener() {
     logger.info(`PaymentExecuted event: ${payee} received ${amount} of token ${token}`);
     
     // Find payment by recipient address
-    const payment = await prisma.payment.findFirst({
+    const payment = await prisma.outboundPayment.findFirst({
       where: {
         recipient: payee.toLowerCase(),
         status: { in: [PaymentStatus.ONCHAIN_REQUESTED, PaymentStatus.PENDING] },
@@ -266,7 +266,7 @@ export function startContractEventListener() {
     });
 
     if (payment) {
-      await prisma.payment.update({
+      await prisma.outboundPayment.update({
         where: { id: payment.id },
         data: { status: PaymentStatus.ONCHAIN_PAID },
       });
@@ -279,7 +279,7 @@ export function startContractEventListener() {
     logger.warn(`PaymentFailed event: ${payee}, reason: ${reason}`);
     
     // Find payment by recipient address
-    const payment = await prisma.payment.findFirst({
+    const payment = await prisma.outboundPayment.findFirst({
       where: {
         recipient: payee.toLowerCase(),
         status: { in: [PaymentStatus.ONCHAIN_REQUESTED, PaymentStatus.PENDING] },
@@ -288,7 +288,7 @@ export function startContractEventListener() {
     });
 
     if (payment) {
-      await prisma.payment.update({
+      await prisma.outboundPayment.update({
         where: { id: payment.id },
         data: { status: PaymentStatus.FAILED },
       });

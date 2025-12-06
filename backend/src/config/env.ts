@@ -49,6 +49,10 @@ export const config = {
   railSigningKey: process.env.RAIL_SIGNING_KEY || "",
   // Legacy support (will be replaced by OAuth2 token)
   railApiKey: process.env.RAIL_API_KEY || "",
+
+  // JWT Authentication
+  jwtSecret: process.env.JWT_SECRET || "",
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
 } as const;
 
 export type Config = typeof config;

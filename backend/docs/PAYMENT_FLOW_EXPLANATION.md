@@ -126,7 +126,7 @@ The test flow:
 
 To monitor your wallets for transactions:
 ```bash
-node check-wallet.js
+node scripts/check-wallet.js
 ```
 
 This will show current balances and transaction links.

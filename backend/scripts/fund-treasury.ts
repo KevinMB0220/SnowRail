@@ -12,9 +12,9 @@
 
 import dotenv from "dotenv";
 import { ethers } from "ethers";
-import { config } from "./src/config/env.js";
-import { getCurrentNetworkConfig } from "./src/config/networkConfig.js";
-import { getProvider, getSigner } from "./src/config/contractConfig.js";
+import { config } from "../src/config/env.js";
+import { getCurrentNetworkConfig } from "../src/config/networkConfig.js";
+import { getProvider, getSigner } from "../src/config/contractConfig.js";
 
 dotenv.config();
 

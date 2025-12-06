@@ -13,7 +13,7 @@ export type CreatePaymentInput = {
 export async function createManyPayments(
   inputs: CreatePaymentInput[],
 ) {
-  return prisma.payment.createMany({
+  return prisma.outboundPayment.createMany({
     data: inputs.map((p) => ({
       payrollId: p.payrollId,
       amount: p.amount,
@@ -29,7 +29,7 @@ export async function updatePayrollPaymentsStatus(
   payrollId: string,
   status: string,
 ) {
-  return prisma.payment.updateMany({
+  return prisma.outboundPayment.updateMany({
     where: { payrollId },
     data: { status },
   });
@@ -37,7 +37,7 @@ export async function updatePayrollPaymentsStatus(
 
 // Get all payments for a payroll (used by payroll detail)
 export async function getPaymentsByPayrollId(payrollId: string) {
-  return prisma.payment.findMany({
+  return prisma.outboundPayment.findMany({
     where: { payrollId },
     orderBy: { createdAt: "asc" },
   });

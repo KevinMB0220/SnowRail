@@ -4,7 +4,7 @@
  */
 
 import express, { Express, Request, Response } from "express";
-import { registerPayrollRoutes } from "./src/api/payrollRoutes.js";
+import { registerPayrollRoutes } from "../../src/api/payrollRoutes.js";
 
 const app = express();
 app.use(express.json());
