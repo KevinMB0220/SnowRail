@@ -21,7 +21,7 @@ export function LoginPage() {
       setSuccessMessage("Sign in successful! Redirecting...");
       // Wait a moment to show success message before redirect
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/");
       }, 1000);
     }
     return success;
