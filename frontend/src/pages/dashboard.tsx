@@ -1,307 +1,247 @@
-import { useState } from "react";
-import { executePayroll } from "../lib/api";
-import type { MeteringInfo } from "../App";
-import { CreditCard, Wallet, Box, ArrowRight, Zap, Shield, Activity, Globe, DollarSign, Sparkles } from "lucide-react";
+/**
+ * Dashboard Page
+ * Main dashboard for authenticated users showing balances, payments, and company status
+ */
 
-type DashboardProps = {
-  onPaymentRequired: (metering: MeteringInfo) => void;
-};
+import { useDashboard } from "../hooks/use-dashboard.js";
+import { BalanceCard } from "../components/dashboard/balance-card.js";
+import { RecentPayments } from "../components/dashboard/recent-payments.js";
+import { PaymentSimulator } from "../components/dashboard/mock-payment-simulator.js";
+import { RefreshCw, AlertCircle, CheckCircle2, Info, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/use-auth.js";
 
-function Dashboard({ onPaymentRequired }: DashboardProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function Dashboard() {
+  const { data, isLoading, error, refetch } = useDashboard();
+  const { company } = useAuth();
+  const navigate = useNavigate();
 
-  const handleExecutePayroll = async () => {
-    setLoading(true);
-    setError(null);
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="card p-6 animate-pulse">
+          <div className="h-6 bg-teal-200 rounded w-1/3 mb-2"></div>
+          <div className="h-4 bg-teal-100 rounded w-1/2"></div>
+        </div>
 
-    try {
-      // First call without payment token - expect 402
-      const result = await executePayroll();
+        {/* Balance skeleton */}
+        <div className="card p-8 animate-pulse">
+          <div className="h-8 bg-teal-200 rounded w-1/4 mb-4"></div>
+          <div className="h-12 bg-teal-100 rounded w-1/3 mb-6"></div>
+          <div className="space-y-3">
+            <div className="h-16 bg-teal-50 rounded"></div>
+            <div className="h-16 bg-teal-50 rounded"></div>
+          </div>
+        </div>
 
-      if (!result.success && result.status === 402) {
-        // Payment required - show payment flow
-        if (result.error.metering) {
-          const meteringInfo: MeteringInfo = {
-            ...(result.error.metering as MeteringInfo),
-            meterId: result.error.meterId || "payroll_execute",
-          };
-          onPaymentRequired(meteringInfo);
-        }
-      } else if (!result.success) {
-        setError(result.error.message || "Failed to execute payroll");
-      }
-    } catch (err) {
-      setError("Network error. Is the backend running?");
-    } finally {
-      setLoading(false);
-    }
-  };
+        {/* Payments skeleton */}
+        <div className="card p-8 animate-pulse">
+          <div className="h-6 bg-teal-200 rounded w-1/4 mb-6"></div>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-12 bg-teal-50 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="card p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-teal-900 mb-2">Error loading dashboard</h2>
+        <p className="text-teal-600 mb-6">{error}</p>
+        <button
+          onClick={() => refetch()}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+        >
+          <RefreshCw size={16} />
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  // Show empty state if no data
+  if (!data) {
+    return (
+      <div className="card p-8 text-center">
+        <Info className="w-12 h-12 text-teal-500 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-teal-900 mb-2">Welcome to SnowRail</h2>
+        <p className="text-teal-600 mb-6">
+          Start receiving x402 payments to see your balances and transaction history here.
+        </p>
+      </div>
+    );
+  }
+
+  const { company: companyData, balances, recentPayments, stats } = data;
+  
+  // Use company from dashboard data, fallback to auth company
+  const activeCompanyId = companyData?.id || company?.id;
+
+  // Determine KYB/Rail status banner
+  const showKybBanner = companyData.kybLevel === 0;
+  const showRailBanner = companyData.kybLevel === 1 && companyData.railStatus === "none";
+  const showAllComplete = companyData.kybLevel === 1 && companyData.railStatus === "active";
 
   return (
-    <div className="dashboard">
-      {/* Hero Section */}
-      <section className="text-center py-16 max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-sm font-medium mb-6">
-          <Sparkles size={14} />
-          <span>Sovereign Agent Stack • x402 + ERC-8004 + Arweave</span>
-        </div>
-        <h1 className="text-5xl font-bold tracking-tight text-teal-900 mb-6 leading-tight">
-          AI-Native Treasury on
-          <span className="text-teal-600"> Avalanche</span>
-        </h1>
-        <p className="text-xl text-teal-700 mb-10 leading-relaxed">
-          Autonomous treasury orchestration for AI agents. Execute cross-border payroll with permanent audit trail.
-        </p>
-      </section>
-
-      <div className="grid md:grid-cols-2 gap-8 mb-16">
-      {/* Main Action Card */}
-        <div className="card p-8 flex flex-col">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 bg-teal-100 rounded-xl shrink-0" style={{color: '#0d9488'}}>
-              <Wallet size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-teal-900">Demo Payroll</h2>
-              <p className="text-teal-700">Execute a batch payment to 10 freelancers</p>
-            </div>
+    <div className="space-y-6">
+      {/* Header with Company Info */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-teal-900 mb-1">
+              {companyData.legalName}
+              {companyData.tradeName && (
+                <span className="text-lg font-normal text-teal-600 ml-2">
+                  ({companyData.tradeName})
+                </span>
+              )}
+            </h1>
+            <p className="text-sm text-teal-600">
+              Dashboard • {companyData.country || "US"}
+            </p>
           </div>
-
-          <div className="space-y-3 mb-6 bg-teal-50 p-4 rounded-xl border border-teal-200 flex-grow">
-            <div className="flex justify-between text-sm">
-              <span className="text-teal-600">Recipients</span>
-              <span className="font-medium text-teal-900">10 freelancers</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-teal-600">Total Amount</span>
-              <span className="font-medium text-teal-900">$6,000.00 USD</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-teal-600">Network</span>
-              <span className="font-medium text-teal-900">Avalanche C-Chain</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-teal-600">Protocol</span>
-              <span className="font-mono text-xs bg-teal-200 px-2 py-0.5 rounded text-teal-800">x402 + 8004</span>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 flex items-center gap-2">
-              <Activity size={16} />
-              {error}
-            </div>
-          )}
-
           <button
-            className="btn btn-primary btn-large w-full mt-auto"
-            onClick={handleExecutePayroll}
-            disabled={loading}
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg transition-colors border border-teal-200"
+            title="Refresh dashboard"
           >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Processing...
-              </>
-            ) : (
-              <>
-                <Zap size={18} />
-                Execute Payroll
-              </>
-            )}
-          </button>
-        </div>
-
-      {/* Payment Form Section */}
-        <div className="card p-8 flex flex-col">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 bg-teal-100 rounded-xl shrink-0" style={{color: '#0d9488'}}>
-              <CreditCard size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-teal-900">Process Payment</h2>
-              <p className="text-teal-700">Complete payment flow: Rail + Blockchain</p>
-            </div>
-          </div>
-
-          <div className="space-y-3 mb-6 bg-teal-50 p-4 rounded-xl border border-teal-200 flex-grow">
-            <div className="flex justify-between text-sm">
-              <span className="text-teal-600">Integration</span>
-              <span className="font-medium text-teal-900">Rail API + Smart Contracts</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-teal-600">Payment Method</span>
-              <span className="font-medium text-teal-900">x402 Protocol</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-teal-600">Network</span>
-              <span className="font-medium text-teal-900">Avalanche Fuji Testnet</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-teal-600">Features</span>
-              <span className="font-medium text-teal-900">Gasless Transactions</span>
-            </div>
-          </div>
-
-          <button
-            className="btn btn-secondary w-full mt-auto"
-            onClick={() => {
-              window.location.hash = "#payment-form";
-            }}
-          >
-            <span>🚀</span>
-            Open Payment Form
+            <RefreshCw size={16} />
+            Refresh
           </button>
         </div>
       </div>
 
-      {/* Sovereign Agent Stack Cards */}
-      <section className="grid md:grid-cols-3 gap-6 mb-16">
+      {/* Status Banners */}
+      {showKybBanner && (
         <div className="card p-6">
-          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-4" style={{color: '#0f766e'}}>
-            <Shield size={20} />
-          </div>
-          <h3 className="font-bold text-teal-900 mb-2">Payments & Metering</h3>
-          <p className="text-sm text-teal-700">x402 + ERC-8004 protocol for autonomous AI agent payments.</p>
-        </div>
-        <div className="card p-6">
-          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-4" style={{color: '#0f766e'}}>
-            <Sparkles size={20} />
-          </div>
-          <h3 className="font-bold text-teal-900 mb-2">Agent Identity</h3>
-          <p className="text-sm text-teal-700">ERC-8004 identity card for agent-to-agent discovery.</p>
-        </div>
-        <div className="card p-6">
-          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-4" style={{color: '#0f766e'}}>
-            <Box size={20} />
-          </div>
-          <h3 className="font-bold text-teal-900 mb-2">Permanent Storage</h3>
-          <p className="text-sm text-teal-700">Arweave receipts - immutable audit trail forever.</p>
-        </div>
-      </section>
-
-      {/* Agent Identity Section - Highlighted */}
-      <section className="card p-8 relative overflow-hidden mb-8" style={{background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)'}}>
-        <div className="absolute top-0 right-0 p-16 bg-teal-400 rounded-full blur-3xl opacity-10 -mr-10 -mt-10"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-white/10 rounded-xl text-white shrink-0">
-              <Sparkles size={24} />
+            <div className="p-2.5 bg-yellow-100 rounded-xl flex-shrink-0">
+              <AlertCircle className="w-6 h-6 text-yellow-700" />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-white mb-1">🤖 Agent Activity & Identity</h2>
-              <p className="text-teal-100">View real payroll transactions with Arweave receipts, agent identity (ERC-8004), and live statistics.</p>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-teal-900 mb-2">
+                Verification Required
+              </h3>
+              <p className="text-sm text-teal-700 mb-4 leading-relaxed">
+                Complete KYB verification to enable withdrawals. This is required before you can
+                create a Rail account and withdraw funds.
+              </p>
+              <button
+                onClick={() => navigate("/settings")}
+                className="btn btn-primary"
+              >
+                Start Verification
+                <ArrowRight size={18} />
+              </button>
             </div>
           </div>
-          
-          <button
-            className="py-3 px-6 bg-white text-teal-900 hover:bg-teal-50 rounded-xl font-medium transition-colors flex items-center gap-2 whitespace-nowrap shadow-lg"
-            onClick={() => {
-              window.location.hash = "#agent-identity";
-            }}
-          >
-            View Activity
-            <ArrowRight size={16} />
-          </button>
         </div>
-      </section>
+      )}
 
-      {/* Contract Test Section */}
-      <section className="card p-8 relative overflow-hidden mb-16" style={{background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)'}}>
-        <div className="absolute top-0 right-0 p-16 bg-teal-400 rounded-full blur-3xl opacity-10 -mr-10 -mt-10"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+      {showRailBanner && (
+        <div className="card p-6">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-white/10 rounded-xl text-white shrink-0">
-              <Activity size={24} />
+            <div className="p-2.5 bg-teal-100 rounded-xl flex-shrink-0" style={{ color: "#0d9488" }}>
+              <Info className="w-6 h-6" />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-white mb-1">Contract Test</h2>
-              <p className="text-teal-100">Test Treasury contract operations through the agent with facilitator validation.</p>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-teal-900 mb-2">
+                Create Rail Account
+              </h3>
+              <p className="text-sm text-teal-700 mb-4 leading-relaxed">
+                Your company is verified. Create your USD account in Rail to enable withdrawals.
+              </p>
+              <button
+                onClick={() => navigate("/settings")}
+                className="btn btn-primary"
+              >
+                Create Rail Account
+                <ArrowRight size={18} />
+              </button>
             </div>
-          </div>
-          
-          <button
-            className="py-3 px-6 bg-white text-teal-900 hover:bg-teal-50 rounded-xl font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
-            onClick={() => {
-              window.location.hash = "#contract-test";
-            }}
-          >
-            Run Contract Test
-            <ArrowRight size={16} />
-          </button>
-        </div>
-      </section>
-
-      {/* About Section - Clean and Simple */}
-      <section className="mb-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-teal-900 mb-4">
-            Built for Autonomous AI Agents
-          </h2>
-          <p className="text-lg text-teal-700 max-w-3xl mx-auto leading-relaxed">
-            SnowRail implements the Sovereign Agent Stack - the first treasury system designed for AI agents 
-            to discover, pay, and execute cross-border payroll autonomously.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Benefit 1 */}
-          <div className="card p-8 text-center">
-            <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{color: '#0d9488'}}>
-              <Globe size={28} />
-            </div>
-            <h3 className="text-xl font-bold text-teal-900 mb-3">Global Reach</h3>
-            <p className="text-teal-700 leading-relaxed">
-              Pay anyone, anywhere in the world. Send stablecoins to freelancers and contractors 
-              without borders or bank delays.
-            </p>
-          </div>
-
-          {/* Benefit 2 */}
-          <div className="card p-8 text-center">
-            <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{color: '#0d9488'}}>
-              <Zap size={28} />
-            </div>
-            <h3 className="text-xl font-bold text-teal-900 mb-3">Instant Payments</h3>
-            <p className="text-teal-700 leading-relaxed">
-              Settle payments in seconds on Avalanche blockchain. 
-              No waiting days for bank transfers or dealing with intermediaries.
-            </p>
-          </div>
-
-          {/* Benefit 3 */}
-          <div className="card p-8 text-center">
-            <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{color: '#0d9488'}}>
-              <DollarSign size={28} />
-            </div>
-            <h3 className="text-xl font-bold text-teal-900 mb-3">Transparent Costs</h3>
-            <p className="text-teal-700 leading-relaxed">
-              Pay only for what you use with clear, upfront pricing. 
-              No hidden fees, no surprises, powered by x402 protocol.
-            </p>
           </div>
         </div>
+      )}
 
-        {/* Simple CTA */}
-        <div className="card p-10 mt-8 text-center" style={{background: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)'}}>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-teal-700 font-medium mb-4">
-            <Sparkles size={16} />
-            <span>Built on Avalanche</span>
+      {showAllComplete && (
+        <div className="card p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-2.5 bg-teal-100 rounded-xl flex-shrink-0" style={{ color: "#0d9488" }}>
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-teal-900 mb-2">
+                All Set Up!
+              </h3>
+              <p className="text-sm text-teal-700 leading-relaxed">
+                Your company is verified and your Rail account is active. You can now withdraw funds.
+              </p>
+            </div>
           </div>
-          <h3 className="text-2xl font-bold text-teal-900 mb-3">
-            Ready to streamline your global payroll?
+        </div>
+      )}
+
+      {/* Balance Card */}
+      <BalanceCard data={data} />
+
+      {/* Payment Simulator */}
+      {activeCompanyId && (
+        <PaymentSimulator
+          companyId={activeCompanyId}
+          onPaymentCreated={() => {
+            // Refresh dashboard data after payment
+            setTimeout(() => {
+              refetch();
+            }, 500);
+          }}
+        />
+      )}
+
+      {/* Stats Summary */}
+      {stats.totalPayments > 0 && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="card p-6">
+            <div className="text-sm text-teal-600 mb-1">Total Payments</div>
+            <div className="text-2xl font-bold text-teal-900">{stats.totalPayments}</div>
+            <div className="text-xs text-teal-500 mt-1">Confirmed transactions</div>
+          </div>
+          <div className="card p-6">
+            <div className="text-sm text-teal-600 mb-1">Total Received</div>
+            <div className="text-2xl font-bold text-teal-900">
+              ${stats.totalReceived.toFixed(2)}
+            </div>
+            <div className="text-xs text-teal-500 mt-1">USD equivalent</div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Payments */}
+      <RecentPayments payments={recentPayments} />
+
+      {/* Empty State Message for First Time Users */}
+      {recentPayments.length === 0 && balances.totalUsd === 0 && (
+        <div className="card p-8 text-center bg-teal-50 border-teal-200">
+          <Info className="w-12 h-12 text-teal-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-teal-900 mb-2">
+            Start Receiving Payments
           </h3>
-          <p className="text-teal-700 text-lg">
-            Try our demo and experience the future of international payments
+          <p className="text-teal-600 mb-4 max-w-md mx-auto">
+            Use the Merchant API to create payment intents and start receiving x402 micropayments.
+            All payments will appear here once confirmed on-chain.
           </p>
+          <div className="text-xs text-teal-500 font-mono bg-white px-3 py-2 rounded border border-teal-200 inline-block">
+            POST /merchant/payments
+          </div>
         </div>
-      </section>
-
+      )}
     </div>
   );
 }
-
-export default Dashboard;
