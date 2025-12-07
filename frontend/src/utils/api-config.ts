@@ -9,7 +9,7 @@
  * Priority:
  * 1. VITE_API_BASE_URL environment variable (if set, always use it)
  * 2. If on localhost → use http://localhost:4000 (local backend)
- * 3. If in production/Vercel → use "" (relative URLs, Vercel handles routing)
+ * 3. If in production/Vercel → use https://snowrail.onrender.com (Render backend)
  */
 export function getApiBase(): string {
   // Priority 1: Check if explicit API URL is provided via environment variable
@@ -32,14 +32,14 @@ export function getApiBase(): string {
       return "http://localhost:4000";
     }
     
-    // If NOT localhost (production/Vercel) → use relative URLs
-    return "";
+    // If NOT localhost (production/Vercel) → use Render backend
+    return "https://snowrail.onrender.com";
   }
 
   // Priority 3: Fallback for SSR or build time
-  // During build, if PROD mode, use relative URLs
+  // During build, if PROD mode, use Render backend
   if (import.meta.env.PROD) {
-    return "";
+    return "https://snowrail.onrender.com";
   }
 
   // Default: development mode → use localhost
