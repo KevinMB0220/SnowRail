@@ -8,9 +8,29 @@ import type {
   LoginRequest,
 } from "../types/auth-types.js";
 
-// Use environment variable in development, empty string (relative) in production for Vercel
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || 
-  (import.meta.env.PROD ? "" : "http://localhost:4000");
+/**
+ * Determine API base URL based on environment
+ * - Development: Use explicit localhost URL or environment variable
+ * - Production: Use empty string for relative URLs (works with Vercel rewrites)
+ */
+const getApiBase = (): string => {
+  // Check if explicit API URL is provided via environment variable
+  const envApiUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  if (envApiUrl) {
+    return envApiUrl;
+  }
+
+  // In production (Vercel), use empty string for relative URLs
+  // Vercel rewrites will handle routing to the backend
+  if (import.meta.env.PROD) {
+    return "";
+  }
+
+  // In development, use localhost backend
+  return "http://localhost:4000";
+};
+
+const API_BASE = getApiBase();
 
 // Types for API responses
 export type MeteringInfo = {
@@ -87,7 +107,7 @@ export async function executePayroll(paymentToken?: string): Promise<{
     headers["X-PAYMENT"] = paymentToken;
   }
 
-  const response = await fetch(`${API_BASE}/payroll/execute`, {
+  const response = await fetch(`${API_BASE}/api/payroll/execute`, {
     method: "POST",
     headers,
   });
@@ -119,7 +139,7 @@ export async function getPayroll(id: string): Promise<{
   success: false;
   error: ApiError;
 }> {
-  const response = await fetch(`${API_BASE}/payroll/${id}`);
+  const response = await fetch(`${API_BASE}/api/payroll/${id}`);
   const data = await response.json();
 
   if (!response.ok) {
@@ -302,7 +322,7 @@ export async function processPayment(
     headers["X-PAYMENT"] = paymentToken;
   }
 
-  const response = await fetch(`${API_BASE}/payment/process`, {
+  const response = await fetch(`${API_BASE}/api/payment/process`, {
     method: "POST",
     headers,
     body: JSON.stringify(paymentRequest),
@@ -404,7 +424,7 @@ export async function testContract(paymentToken?: string): Promise<{
     headers["X-PAYMENT"] = paymentToken;
   }
 
-  const response = await fetch(`${API_BASE}/treasury/test`, {
+  const response = await fetch(`${API_BASE}/api/treasury/test`, {
     method: "POST",
     headers,
   });
