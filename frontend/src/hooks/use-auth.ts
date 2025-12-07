@@ -1,9 +1,18 @@
 /**
- * Authentication hook
- * Main hook for managing authentication state and operations
+ * Authentication context + hook
+ * Provides a shared auth state across the entire app
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  createElement,
+  useRef,
+  type ReactNode,
+} from "react";
 import { signup, login, getCurrentUser } from "../lib/api.js";
 import { getToken, setToken, clearToken, isTokenValid } from "./use-session.js";
 import { translateErrorMessage } from "../utils/error-messages.js";
@@ -21,10 +30,9 @@ interface UseAuthReturn {
   checkAuth: () => Promise<void>;
 }
 
-/**
- * Main authentication hook
- */
-export function useAuth(): UseAuthReturn {
+const AuthContext = createContext<UseAuthReturn | undefined>(undefined);
+
+function useProvideAuth(): UseAuthReturn {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -202,4 +210,23 @@ export function useAuth(): UseAuthReturn {
     logout: handleLogout,
     checkAuth,
   };
+}
+
+/**
+ * AuthProvider wraps the app and exposes auth state to all children
+ */
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const value = useProvideAuth();
+  return createElement(AuthContext.Provider, { value }, children);
+}
+
+/**
+ * Main authentication hook (consumes context)
+ */
+export function useAuth(): UseAuthReturn {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }
