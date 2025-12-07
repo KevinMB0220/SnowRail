@@ -8,9 +8,9 @@
     "create-x402": "./cli.js"
   },
   "scripts": {
-    "build": "npx prisma generate && npx prisma migrate deploy && tsc",
-    "start": "node --max-old-space-size=1024 dist/server.js",
-    "start:prod": "NODE_ENV=production node --max-old-space-size=512 dist/server.js",
+    "build": "npx prisma generate && tsc",
+    "start": "npx prisma migrate deploy && node --max-old-space-size=1024 dist/server.js",
+    "start:prod": "npx prisma migrate deploy && NODE_ENV=production node --max-old-space-size=512 dist/server.js",
     "dev": "tsc && node dist/server.js",
     "facilitator": "tsc && node dist/facilitator.js",
     "facilitator:dev": "tsc && node dist/facilitator.js",
