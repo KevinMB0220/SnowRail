@@ -1,5 +1,4 @@
-import OpenAI from 'openai';
-import type { OpenAI as OpenAIType } from 'openai';
+import { OpenAI } from 'openai';
 import { EventQueue, RequestContext, TaskState } from './x402Types.js';
 import { getTreasuryContract, getTreasuryContractReadOnly } from './config/contractConfig.js';
 import { getCurrentNetworkConfig } from './config/networkConfig.js';
@@ -30,7 +29,7 @@ interface ExampleServiceOptions {
  * Payment validation is handled by the server before this service is invoked.
  */
 export class ExampleService {
-  private openai: OpenAIType;
+  private openai: OpenAI;
   private payToAddress: string;
   private network: string;
   private readonly model: string;
