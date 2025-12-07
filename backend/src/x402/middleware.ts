@@ -26,7 +26,7 @@ export function x402Protect(meterId: string) {
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
-    const paymentHeader = req.header("X-PAYMENT");
+    const paymentHeader = req.get("X-PAYMENT") || req.headers["x-payment"] as string | undefined;
     const meter = getMeter(meterId);
 
     if (!meter) {
