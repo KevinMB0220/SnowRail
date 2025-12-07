@@ -157,7 +157,7 @@ router.get("/stats", async (req: Request, res: Response) => {
       status: string;
       _count: { id: number };
     };
-    
+
     res.json({
       payrolls: {
         byStatus: payrollsByStatus.reduce((acc: Record<string, number>, item: PayrollByStatus) => ({

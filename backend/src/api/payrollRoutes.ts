@@ -19,6 +19,14 @@ export function registerPayrollRoutes(app: Express) {
           });
         }
 
+        type PaymentItem = {
+          id: string;
+          amount: number;
+          currency: string;
+          status: string;
+          recipient: string | null;
+        };
+        
         return res.status(200).json({
           success: true,
           payrollId: payroll.id,
@@ -26,13 +34,6 @@ export function registerPayrollRoutes(app: Express) {
           total: payroll.total,
           currency: payroll.currency,
           paymentsCount: payroll.payments.length,
-          type PaymentItem = {
-            id: string;
-            amount: number;
-            currency: string;
-            status: string;
-            recipient: string | null;
-          };
           payments: payroll.payments.map((p: PaymentItem) => ({
             id: p.id,
             amount: p.amount,
@@ -66,6 +67,16 @@ export function registerPayrollRoutes(app: Express) {
           });
         }
 
+        type PaymentDetail = {
+          id: string;
+          amount: number;
+          currency: string;
+          status: string;
+          recipient: string | null;
+          createdAt: Date;
+          updatedAt: Date;
+        };
+        
         return res.status(200).json({
           id: payroll.id,
           total: payroll.total,
@@ -73,15 +84,6 @@ export function registerPayrollRoutes(app: Express) {
           status: payroll.status,
           createdAt: payroll.createdAt.toISOString(),
           updatedAt: payroll.updatedAt.toISOString(),
-          type PaymentDetail = {
-            id: string;
-            amount: number;
-            currency: string;
-            status: string;
-            recipient: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-          };
           payments: payroll.payments.map((p: PaymentDetail) => ({
             id: p.id,
             amount: p.amount,
