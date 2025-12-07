@@ -11,6 +11,21 @@ importers:
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
+      '@types/bcrypt':
+        specifier: ^5.0.2
+        version: 5.0.2
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/jsonwebtoken':
+        specifier: ^9.0.7
+        version: 9.0.10
+      '@types/lodash':
+        specifier: ^4.17.21
+        version: 4.17.21
+      '@types/node':
+        specifier: ^24.6.2
+        version: 24.10.1
       arweave:
         specifier: ^1.15.7
         version: 1.15.7
@@ -32,31 +47,15 @@ importers:
       openai:
         specifier: ^4.78.0
         version: 4.104.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.25.76)
-      x402:
-        specifier: ^0.7.0
-        version: 0.7.3(@solana/sysvars@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(@tanstack/query-core@5.90.12)(@tanstack/react-query@5.90.12(react@18.3.1))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(react@18.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
-    devDependencies:
-      '@types/bcrypt':
-        specifier: ^5.0.2
-        version: 5.0.2
-      '@types/express':
-        specifier: ^4.17.21
-        version: 4.17.25
-      '@types/jsonwebtoken':
-        specifier: ^9.0.7
-        version: 9.0.10
-      '@types/lodash':
-        specifier: ^4.17.21
-        version: 4.17.21
-      '@types/node':
-        specifier: ^24.6.2
-        version: 24.10.1
       prisma:
         specifier: ^5.22.0
         version: 5.22.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      x402:
+        specifier: ^0.7.0
+        version: 0.7.3(@solana/sysvars@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(@tanstack/query-core@5.90.12)(@tanstack/react-query@5.90.12(react@18.3.1))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(react@18.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
 
 packages:
 
