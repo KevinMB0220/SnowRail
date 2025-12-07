@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "buildCommand": "cd backend && npm run build && cd ../frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd backend && npm install && cd ../frontend && npm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/facilitator/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/health",
+      "destination": "/api"
+    },
+    {
+      "source": "/process",
+      "destination": "/api"
+    },
+    {
+      "source": "/test",
+      "destination": "/api"
+    },
+    {
+      "source": "/agent/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/validate-agent/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/merchant/:path*",
+      "destination": "/api"
+    },
+    {
+      "source": "/internal/:path*",
+      "destination": "/api"
+    }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

@@ -8,7 +8,9 @@ import type {
   LoginRequest,
 } from "../types/auth-types.js";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:4000";
+// Use environment variable in development, empty string (relative) in production for Vercel
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || 
+  (import.meta.env.PROD ? "" : "http://localhost:4000");
 
 // Types for API responses
 export type MeteringInfo = {
