@@ -5,7 +5,7 @@
  * Detects SQLite (file:) vs PostgreSQL (postgresql:// or postgres://)
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import dotenv from 'dotenv';
@@ -69,5 +69,42 @@ try {
   }
 } catch (error) {
   // migration_lock.toml doesn't exist yet, that's fine
+}
+
+// Convert SQLite migrations to PostgreSQL if needed
+if (provider === 'postgresql') {
+  const migrationsDir = join(__dirname, '..', 'prisma', 'migrations');
+  try {
+    const migrations = readdirSync(migrationsDir, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
+    
+    for (const migrationName of migrations) {
+      const migrationSqlPath = join(migrationsDir, migrationName, 'migration.sql');
+      try {
+        let migrationSql = readFileSync(migrationSqlPath, 'utf-8');
+        let updated = false;
+        
+        // Convert SQLite-specific types to PostgreSQL
+        // DATETIME -> TIMESTAMP
+        if (migrationSql.includes('DATETIME')) {
+          migrationSql = migrationSql.replace(/DATETIME/g, 'TIMESTAMP');
+          updated = true;
+        }
+        
+        // CURRENT_TIMESTAMP is fine for both, but ensure it's compatible
+        // SQLite uses CURRENT_TIMESTAMP, PostgreSQL also supports it
+        
+        if (updated) {
+          writeFileSync(migrationSqlPath, migrationSql, 'utf-8');
+          console.log(`✅ Converted migration ${migrationName} from SQLite to PostgreSQL`);
+        }
+      } catch (error) {
+        // migration.sql doesn't exist in this migration, skip
+      }
+    }
+  } catch (error) {
+    // migrations directory doesn't exist or can't be read, that's fine
+  }
 }
 
