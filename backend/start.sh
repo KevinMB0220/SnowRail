@@ -79,23 +79,13 @@ if [ -n "$DATABASE_URL" ]; then
   
   if [ -n "$PRISMA_DIR" ]; then
     cd "$PRISMA_DIR"
-    # Resolve old failed SQLite migration if it exists
-    if npx prisma migrate resolve --rolled-back 20251208224855_init 2>/dev/null; then
-      echo "✅ Resolved old failed migration"
-    fi
-    
-    # Try to deploy migrations
+    # Deploy migrations (clean start - no failed migrations to resolve)
     if npx prisma migrate deploy; then
       echo "✅ Migrations applied successfully"
     else
-      echo "⚠️  Migration deploy failed, checking if tables already exist..."
-      # Check if tables exist and mark migration as applied if they do
-      if node scripts/check-and-resolve-migration.js 2>/dev/null; then
-        echo "✅ Migration issue resolved"
-      else
-        echo "⚠️  Could not automatically resolve migration issues"
-        echo "   Manual fix: npx prisma migrate resolve --applied 20251209000000_init_postgresql"
-      fi
+      echo "⚠️  Migration deploy failed"
+      echo "   If you need to reset the database, run: node scripts/reset-database.js"
+      echo "   WARNING: This will delete all data!"
     fi
     cd "$SERVER_DIR"
   else
