@@ -57,8 +57,28 @@ export function PaymentSimulator({
       });
 
       if (!intentResponse.ok) {
-        const errorData = await intentResponse.json();
-        throw new Error(errorData.message || "Failed to create payment intent");
+        // Check if response is JSON before parsing
+        const contentType = intentResponse.headers.get("content-type");
+        let errorMessage = `Failed to create payment intent (${intentResponse.status})`;
+        
+        if (contentType && contentType.includes("application/json")) {
+          try {
+            const errorData = await intentResponse.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            // If JSON parsing fails, use default message
+          }
+        } else {
+          // If not JSON (e.g., HTML error page), provide helpful message
+          const text = await intentResponse.text();
+          if (intentResponse.status === 404) {
+            errorMessage = "Merchant API endpoint not found. Please ensure the backend server is running and Merchant API is enabled.";
+          } else {
+            errorMessage = `Server error: ${intentResponse.status} ${intentResponse.statusText}`;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const intentData = await intentResponse.json();

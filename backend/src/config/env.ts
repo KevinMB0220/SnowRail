@@ -55,7 +55,8 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
 
   // Merchant API Configuration
-  merchantApiEnabled: process.env.MERCHANT_API_ENABLED === "true",
+  // Enabled by default, can be disabled by setting MERCHANT_API_ENABLED=false
+  merchantApiEnabled: process.env.MERCHANT_API_ENABLED !== "false",
   coingeckoApiKey: process.env.COINGECKO_API_KEY || "",
   x402CallbackSecret: process.env.X402_CALLBACK_SECRET || "",
 } as const;
