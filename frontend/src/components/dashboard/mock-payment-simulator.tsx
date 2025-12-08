@@ -70,12 +70,13 @@ export function PaymentSimulator({
           }
         } else {
           // If not JSON (e.g., HTML error page), provide helpful message
-          const text = await intentResponse.text();
           if (intentResponse.status === 404) {
             errorMessage = "Merchant API endpoint not found. Please ensure the backend server is running and Merchant API is enabled.";
           } else {
             errorMessage = `Server error: ${intentResponse.status} ${intentResponse.statusText}`;
           }
+          // Consume the response body to avoid memory leaks
+          await intentResponse.text().catch(() => {});
         }
         
         throw new Error(errorMessage);
