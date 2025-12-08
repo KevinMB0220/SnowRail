@@ -158,9 +158,7 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
 
           <button
             className="btn btn-secondary w-full mt-auto"
-            onClick={() => {
-              window.location.hash = "#payment-form";
-            }}
+            onClick={() => navigate("/payment-form")}
           >
             <span>🚀</span>
             Open Payment Form
@@ -210,9 +208,7 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
           
           <button
             className="py-3 px-6 bg-white text-teal-900 hover:bg-teal-50 rounded-xl font-medium transition-colors flex items-center gap-2 whitespace-nowrap shadow-lg"
-            onClick={() => {
-              window.location.hash = "#agent-identity";
-            }}
+            onClick={() => navigate("/agent-identity")}
           >
             View Activity
             <ArrowRight size={16} />
@@ -237,9 +233,7 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
           
           <button
             className="py-3 px-6 bg-white text-teal-900 hover:bg-teal-50 rounded-xl font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
-            onClick={() => {
-              window.location.hash = "#contract-test";
-            }}
+            onClick={() => navigate("/contract-test")}
           >
             Run Contract Test
             <ArrowRight size={16} />
