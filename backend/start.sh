@@ -68,12 +68,32 @@ if [ -n "$DATABASE_URL" ]; then
   
   echo "🔄 Running Prisma migrations..."
   # Find prisma directory (could be in parent or current)
+  PRISMA_DIR=""
   if [ -f "prisma/schema.prisma" ]; then
-    npx prisma migrate deploy
+    PRISMA_DIR="$(pwd)"
   elif [ -f "../prisma/schema.prisma" ]; then
-    cd .. && npx prisma migrate deploy && cd "$SERVER_DIR"
+    PRISMA_DIR="$(cd .. && pwd)"
   elif [ -f "../../prisma/schema.prisma" ]; then
-    cd ../.. && npx prisma migrate deploy && cd "$SERVER_DIR"
+    PRISMA_DIR="$(cd ../.. && pwd)"
+  fi
+  
+  if [ -n "$PRISMA_DIR" ]; then
+    cd "$PRISMA_DIR"
+    # Try to deploy migrations
+    if npx prisma migrate deploy; then
+      echo "✅ Migrations applied successfully"
+    else
+      echo "⚠️  Migration deploy failed, checking for failed migrations..."
+      # If there's a failed migration from the old SQLite migration, resolve it
+      if npx prisma migrate resolve --rolled-back 20251208224855_init 2>/dev/null; then
+        echo "✅ Resolved old failed migration, retrying deploy..."
+        npx prisma migrate deploy
+      else
+        echo "⚠️  Could not automatically resolve failed migrations"
+        echo "   You may need to manually resolve them or reset the database"
+      fi
+    fi
+    cd "$SERVER_DIR"
   else
     echo "⚠️  WARNING: Could not find prisma/schema.prisma, skipping migrations"
   fi
