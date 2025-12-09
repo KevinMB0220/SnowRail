@@ -6,13 +6,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/use-auth.js";
-import { LogOut, ChevronDown, User, Wallet } from "lucide-react";
+import { LogOut, ChevronDown, User, Wallet, X } from "lucide-react";
 import { CoreWalletButton } from "../core-wallet-button.js";
+import { useCoreWallet } from "../../hooks/use-core-wallet.js";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function UserMenu() {
   const navigate = useNavigate();
   const { user, company, logout } = useAuth();
+  const { isConnected, account, disconnectWallet } = useCoreWallet();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -112,13 +114,24 @@ export function UserMenu() {
               <div className="flex items-center gap-2 p-2 rounded-lg bg-navy-800/50 border border-white/5">
                 <Wallet className="w-3.5 h-3.5 text-electric-blue" />
                 <div className="flex-1">
-                  <CoreWalletButton variant="text" />
+                  <CoreWalletButton variant="text" showDisconnect={true} />
                 </div>
               </div>
             </div>
 
             {/* Menu items */}
             <div className="p-2">
+              {/* Disconnect wallet button - only show when connected */}
+              {isConnected && account && (
+                <button
+                  onClick={disconnectWallet}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 transition-colors mb-2"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Disconnect Wallet</span>
+                </button>
+              )}
+              
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
