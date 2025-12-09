@@ -59,6 +59,10 @@ export const config = {
   merchantApiEnabled: process.env.MERCHANT_API_ENABLED !== "false",
   coingeckoApiKey: process.env.COINGECKO_API_KEY || "",
   x402CallbackSecret: process.env.X402_CALLBACK_SECRET || "",
+  
+  // x402 Demo Token Configuration
+  // Allow demo-token for testing (set X402_ALLOW_DEMO_TOKEN=true to enable in production)
+  x402AllowDemoToken: process.env.X402_ALLOW_DEMO_TOKEN === "true",
 } as const;
 
 export type Config = typeof config;

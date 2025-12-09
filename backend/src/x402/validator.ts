@@ -29,9 +29,13 @@ export async function validateXPaymentHeader(
 ): Promise<boolean> {
   logger.debug(`Validating X-PAYMENT for meter: ${meterId}`);
 
-  // Development: Accept demo-token for testing (only if facilitator is mock)
-  if (headerValue === "demo-token" && config.x402FacilitatorUrl.includes("mock")) {
-    logger.info(`Demo token accepted for meter: ${meterId} (using mock facilitator)`);
+  // Accept demo-token in development mode, when using mock facilitator, or if explicitly allowed
+  const isDevelopment = process.env.NODE_ENV !== "production";
+  const isMockFacilitator = config.x402FacilitatorUrl.includes("mock");
+  const allowDemoToken = config.x402AllowDemoToken || isDevelopment || isMockFacilitator;
+  
+  if (headerValue === "demo-token" && allowDemoToken) {
+    logger.info(`Demo token accepted for meter: ${meterId} (development: ${isDevelopment}, mock: ${isMockFacilitator}, allowed: ${config.x402AllowDemoToken})`);
     return true;
   }
 
@@ -40,6 +44,11 @@ export async function validateXPaymentHeader(
     const meter = getMeter(meterId);
     if (!meter) {
       logger.error(`Meter not found: ${meterId}`);
+      // Allow demo-token even if meter not found (if allowed)
+      if (headerValue === "demo-token" && allowDemoToken) {
+        logger.warn(`Meter not found, accepting demo-token (allowed: ${allowDemoToken})`);
+        return true;
+      }
       return false;
     }
 
@@ -47,6 +56,15 @@ export async function validateXPaymentHeader(
     const result = await validateWithFacilitator(headerValue, meterId, meter);
     
     if (result.valid === true) {
+      return true;
+    }
+
+    // If validation failed but demo-token is allowed, accept it
+    if (headerValue === "demo-token" && allowDemoToken) {
+      logger.warn(`Facilitator validation failed for demo-token, but accepting (allowed: ${allowDemoToken})`, {
+        error: result.error,
+        message: result.message,
+      });
       return true;
     }
 
@@ -58,9 +76,9 @@ export async function validateXPaymentHeader(
   } catch (error) {
     logger.error(`Error validating payment with facilitator for meter: ${meterId}`, error);
     
-    // In development, allow demo-token even if facilitator fails
-    if (headerValue === "demo-token") {
-      logger.warn("Facilitator unavailable, accepting demo-token for development");
+      // If facilitator is unavailable and demo-token is allowed, accept it
+    if (headerValue === "demo-token" && allowDemoToken) {
+      logger.warn(`Facilitator unavailable, accepting demo-token (allowed: ${allowDemoToken})`);
       return true;
     }
     
