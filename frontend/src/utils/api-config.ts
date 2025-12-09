@@ -9,7 +9,7 @@
  * Priority:
  * 1. VITE_API_BASE_URL environment variable (if set, always use it)
  * 2. If on localhost → use http://localhost:4000 (local backend)
- * 3. If in production → use Railway backend (https://snowrail-production.up.railway.app)
+ * 3. If in production → use Render backend (https://snowrail.onrender.com)
  */
 export function getApiBase(): string {
   // Priority 1: Check if explicit API URL is provided via environment variable
@@ -32,14 +32,14 @@ export function getApiBase(): string {
       return "http://localhost:4000";
     }
     
-    // If NOT localhost (production) → use Railway backend
-    return "https://snowrail-production.up.railway.app";
+    // If NOT localhost (production) → use Render backend
+    return "https://snowrail.onrender.com";
   }
 
   // Priority 3: Fallback for SSR or build time
-  // During build, if PROD mode, use Railway backend
+  // During build, if PROD mode, use Render backend
   if (import.meta.env.PROD) {
-    return "https://snowrail-production.up.railway.app";
+    return "https://snowrail.onrender.com";
   }
 
   // Default: development mode → use localhost

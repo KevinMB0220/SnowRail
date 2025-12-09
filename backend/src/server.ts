@@ -31,9 +31,8 @@ import { registerAgentRoutes } from "./api/agentRoutes.js";
 dotenv.config();
 
 const app: Express = express();
-app.use(express.json());
 
-// CORS Configuration
+// CORS Configuration - MUST be before express.json() and all routes
 const defaultCorsOrigins = [
   "http://localhost:3000",
   "http://localhost:5173", // Vite default port
@@ -47,7 +46,7 @@ const envCorsOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
 
 const allowedOrigins = new Set([...defaultCorsOrigins, ...envCorsOrigins]);
 
-// CORS middleware - must be before other routes
+// CORS middleware - must be FIRST, before express.json() and all routes
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
@@ -90,6 +89,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Parse JSON bodies - AFTER CORS middleware
+app.use(express.json());
 
 // Configuration
 const PORT = process.env.PORT || 3000;
