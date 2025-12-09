@@ -1,6 +1,6 @@
 import { prisma } from "../dbClient.js";
-import { PayrollStatus } from "../domain/payroll.js";
-import { PaymentStatus } from "../domain/payment.js";
+import { PayrollStatus, type PayrollStatusType } from "../domain/payroll.js";
+import { PaymentStatus, type PaymentStatusType } from "../domain/payment.js";
 import { createRailPayment } from "./railClient.js";
 import {
   createManyPayments,
