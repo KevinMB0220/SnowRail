@@ -30,7 +30,7 @@ importers:
         specifier: ^1.15.7
         version: 1.15.7
       bcrypt:
-        specifier: ^5.1.1
+        specifier: 5.1.1
         version: 5.1.1
       dotenv:
         specifier: ^16.4.5
