@@ -1,6 +1,6 @@
 /**
  * Back Button Component
- * Reusable back button with primary styling (green with white text)
+ * Reusable back button
  */
 
 import { ArrowLeft } from "lucide-react";
@@ -26,7 +26,7 @@ export function BackButton({ onClick, label = "Back", iconOnly = false }: BackBu
   return (
     <button
       onClick={handleClick}
-      className="btn btn-primary"
+      className="btn btn-secondary bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-electric-blue/50 transition-colors"
       type="button"
       title={iconOnly ? "Go back" : undefined}
     >
