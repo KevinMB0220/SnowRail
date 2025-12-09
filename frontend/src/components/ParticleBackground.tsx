@@ -27,28 +27,29 @@ export const ParticleBackground = () => {
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
 
-    // Create minimal particles
-    const particleCount = 40;
+    // Create particles - Increased density for better visual
+    const particleCount = 60;
     const particles: Particle[] = [];
+    const connectionDistance = 150;
 
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: Math.random() * 1.5 + 0.5, // Very small: 0.5-2px
-        speedX: (Math.random() - 0.5) * 0.2,
-        speedY: (Math.random() - 0.5) * 0.2,
-        opacity: Math.random() * 0.2 + 0.05, // Very subtle: 0.05-0.25
+        size: Math.random() * 2 + 1, // Slightly larger: 1-3px
+        speedX: (Math.random() - 0.5) * 0.3, // Slightly faster drift
+        speedY: (Math.random() - 0.5) * 0.3,
+        opacity: Math.random() * 0.5 + 0.2, // More visible: 0.2-0.7
       });
     }
 
-    // Animation
+    // Animation loop
     let animationFrameId: number;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      particles.forEach((particle) => {
+      particles.forEach((particle, i) => {
         // Update position
         particle.x += particle.speedX;
         particle.y += particle.speedY;
@@ -59,11 +60,31 @@ export const ParticleBackground = () => {
         if (particle.y < 0) particle.y = canvas.height;
         if (particle.y > canvas.height) particle.y = 0;
 
-        // Draw minimal particle - simple circle
+        // Draw particle
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(20, 184, 166, ${particle.opacity})`;
+        // Electric blue color
+        ctx.fillStyle = `rgba(0, 212, 255, ${particle.opacity})`;
         ctx.fill();
+
+        // Draw connections
+        for (let j = i + 1; j < particles.length; j++) {
+          const otherParticle = particles[j];
+          const dx = particle.x - otherParticle.x;
+          const dy = particle.y - otherParticle.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < connectionDistance) {
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(otherParticle.x, otherParticle.y);
+            // Opacity based on distance
+            const alpha = 1 - distance / connectionDistance;
+            ctx.strokeStyle = `rgba(0, 212, 255, ${alpha * 0.15})`; // Low opacity electric blue lines
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
       });
 
       animationFrameId = requestAnimationFrame(animate);
@@ -89,6 +110,7 @@ export const ParticleBackground = () => {
         height: '100%',
         zIndex: 0,
         pointerEvents: 'none',
+        background: 'transparent', // Let CSS background show through
       }}
     />
   );
