@@ -4,8 +4,10 @@
  */
 
 import { useState } from "react";
-import { Mail, Lock, Building, Globe, AlertCircle, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, Building, Globe, AlertCircle, Eye, EyeOff, CheckCircle2, UserPlus } from "lucide-react";
 import type { SignupRequest } from "../../types/auth-types.js";
+import { motion } from "framer-motion";
+import { SpotlightCard } from "../ui/spotlight-card";
 
 type SignupFormProps = {
   onSubmit: (data: SignupRequest) => Promise<boolean>;
@@ -83,98 +85,43 @@ export function SignupForm({
   const displayError = externalError || error;
   const submitting = isLoading || isSubmitting;
 
-  const inputStyle = {
-    width: "100%",
-    paddingLeft: "2.5rem",
-    paddingRight: "1rem",
-    paddingTop: "0.75rem",
-    paddingBottom: "0.75rem",
-    border: "1px solid #99f6e4",
-    backgroundColor: "#ffffff",
-    borderRadius: "0.5rem",
-    color: "#134e4a",
-    fontSize: "0.9375rem",
-    fontFamily: "inherit",
-    transition: "all 0.2s ease",
-  } as React.CSSProperties;
-
-  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = "#14b8a6";
-    e.target.style.boxShadow = "0 0 0 3px rgba(20, 184, 166, 0.1)";
-  };
-
-  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = "#99f6e4";
-    e.target.style.boxShadow = "none";
-  };
-
   const passwordsMatch = confirmPassword && password === confirmPassword && password.length >= 8;
   const passwordsDontMatch = confirmPassword && password !== confirmPassword;
 
   return (
-    <div style={{ width: "100%", maxWidth: "28rem", margin: "0 auto" }}>
-      <div
-        style={{
-          background: "#ffffff",
-          borderRadius: "0.75rem",
-          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #e5e5e5",
-          padding: "2rem",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <h1
-            style={{
-              fontSize: "1.875rem",
-              fontWeight: 600,
-              color: "#134e4a",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Create your account
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-md mx-auto"
+    >
+      <SpotlightCard className="p-8 border-white/10 bg-navy-800/50">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center p-3 mb-4 rounded-xl bg-gradient-to-tr from-blue-600 to-electric-blue shadow-lg shadow-electric-blue/20">
+            <UserPlus className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+            Create account
           </h1>
-          <p style={{ color: "#0f766e" }}>Get started with SnowRail treasury</p>
+          <p className="text-gray-400">Get started with SnowRail treasury</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {/* Email field */}
           <div>
-            <label
-              htmlFor="email"
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                color: "#0f766e",
-                marginBottom: "0.5rem",
-              }}
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Business Email
             </label>
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: 0,
-                  paddingLeft: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  pointerEvents: "none",
-                  zIndex: 1,
-                }}
-              >
-                <Mail style={{ width: "1.25rem", height: "1.25rem", color: "#5eead4" }} />
+            <div className="relative">
+              <div className="absolute top-0 bottom-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <Mail className="w-5 h-5 text-gray-500" />
               </div>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
+                className="w-full pl-10 pr-4 py-3 bg-navy-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:border-electric-blue focus:ring-1 focus:ring-electric-blue transition-all"
                 placeholder="you@company.com"
                 disabled={submitting}
                 required
@@ -184,45 +131,19 @@ export function SignupForm({
 
           {/* Password field */}
           <div>
-            <label
-              htmlFor="password"
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                color: "#0f766e",
-                marginBottom: "0.5rem",
-              }}
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Password
             </label>
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: 0,
-                  paddingLeft: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  pointerEvents: "none",
-                  zIndex: 1,
-                }}
-              >
-                <Lock style={{ width: "1.25rem", height: "1.25rem", color: "#5eead4" }} />
+            <div className="relative">
+              <div className="absolute top-0 bottom-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <Lock className="w-5 h-5 text-gray-500" />
               </div>
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  ...inputStyle,
-                  paddingRight: "2.75rem",
-                }}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
+                className="w-full pl-10 pr-11 py-3 bg-navy-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:border-electric-blue focus:ring-1 focus:ring-electric-blue transition-all"
                 placeholder="••••••••"
                 disabled={submitting}
                 required
@@ -231,115 +152,35 @@ export function SignupForm({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  right: 0,
-                  paddingRight: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#5eead4",
-                  transition: "color 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#14b8a6";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#5eead4";
-                }}
+                className="absolute top-0 bottom-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white transition-colors"
                 tabIndex={-1}
               >
-                {showPassword ? (
-                  <EyeOff style={{ width: "1.25rem", height: "1.25rem" }} />
-                ) : (
-                  <Eye style={{ width: "1.25rem", height: "1.25rem" }} />
-                )}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            <p style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "#0d9488" }}>At least 8 characters</p>
+            <p className="mt-1 text-xs text-electric-blue">At least 8 characters</p>
           </div>
 
           {/* Confirm Password field */}
           <div>
-            <label
-              htmlFor="confirmPassword"
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                color: "#0f766e",
-                marginBottom: "0.5rem",
-              }}
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Confirm Password
             </label>
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: 0,
-                  paddingLeft: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  pointerEvents: "none",
-                  zIndex: 1,
-                }}
-              >
-                <Lock style={{ width: "1.25rem", height: "1.25rem", color: "#5eead4" }} />
+            <div className="relative">
+              <div className="absolute top-0 bottom-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <Lock className="w-5 h-5 text-gray-500" />
               </div>
               <input
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
-                onChange={(e) => {
-                  const newValue = e.target.value;
-                  setConfirmPassword(newValue);
-                  
-                  // Update border color based on match in real-time
-                  if (newValue && password && newValue === password) {
-                    e.target.style.borderColor = "#16a34a";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(22, 163, 74, 0.1)";
-                  } else if (newValue && password && newValue !== password) {
-                    e.target.style.borderColor = "#dc2626";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.1)";
-                  } else {
-                    e.target.style.borderColor = "#99f6e4";
-                    e.target.style.boxShadow = "none";
-                  }
-                }}
-                style={{
-                  ...inputStyle,
-                  paddingRight: "2.75rem",
-                  borderColor: passwordsMatch ? "#16a34a" : passwordsDontMatch ? "#dc2626" : "#99f6e4",
-                }}
-                onFocus={(e) => {
-                  if (confirmPassword && password && password !== confirmPassword) {
-                    e.target.style.borderColor = "#dc2626";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.1)";
-                  } else if (confirmPassword && password && password === confirmPassword) {
-                    e.target.style.borderColor = "#16a34a";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(22, 163, 74, 0.1)";
-                  } else {
-                    handleInputFocus(e);
-                  }
-                }}
-                onBlur={(e) => {
-                  if (confirmPassword && password && password !== confirmPassword) {
-                    e.target.style.borderColor = "#dc2626";
-                    e.target.style.boxShadow = "none";
-                  } else if (confirmPassword && password && password === confirmPassword) {
-                    e.target.style.borderColor = "#16a34a";
-                    e.target.style.boxShadow = "none";
-                  } else {
-                    handleInputBlur(e);
-                  }
-                }}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`
+                  w-full pl-10 pr-11 py-3 bg-navy-900/50 border rounded-xl text-white placeholder-gray-600 focus:ring-1 transition-all
+                  ${passwordsMatch ? 'border-green-500/50 focus:border-green-500 focus:ring-green-500' : 
+                    passwordsDontMatch ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500' : 
+                    'border-white/10 focus:border-electric-blue focus:ring-electric-blue'}
+                `}
                 placeholder="••••••••"
                 disabled={submitting}
                 required
@@ -348,87 +189,39 @@ export function SignupForm({
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  right: 0,
-                  paddingRight: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#5eead4",
-                  transition: "color 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#14b8a6";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#5eead4";
-                }}
+                className="absolute top-0 bottom-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white transition-colors"
                 tabIndex={-1}
               >
-                {showConfirmPassword ? (
-                  <EyeOff style={{ width: "1.25rem", height: "1.25rem" }} />
-                ) : (
-                  <Eye style={{ width: "1.25rem", height: "1.25rem" }} />
-                )}
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             {passwordsDontMatch && (
-              <p style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "#dc2626", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                <AlertCircle style={{ width: "0.875rem", height: "0.875rem" }} />
-                Passwords do not match
+              <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> Passwords do not match
               </p>
             )}
             {passwordsMatch && (
-              <p style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                <CheckCircle2 style={{ width: "0.875rem", height: "0.875rem" }} />
-                Passwords match
+              <p className="mt-1 text-xs text-green-400 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Passwords match
               </p>
             )}
           </div>
 
           {/* Company Legal Name field */}
           <div>
-            <label
-              htmlFor="companyLegalName"
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                color: "#0f766e",
-                marginBottom: "0.5rem",
-              }}
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Company Legal Name
             </label>
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: 0,
-                  paddingLeft: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  pointerEvents: "none",
-                  zIndex: 1,
-                }}
-              >
-                <Building style={{ width: "1.25rem", height: "1.25rem", color: "#5eead4" }} />
+            <div className="relative">
+              <div className="absolute top-0 bottom-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <Building className="w-5 h-5 text-gray-500" />
               </div>
               <input
                 id="companyLegalName"
                 type="text"
                 value={companyLegalName}
                 onChange={(e) => setCompanyLegalName(e.target.value)}
-                style={inputStyle}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
+                className="w-full pl-10 pr-4 py-3 bg-navy-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:border-electric-blue focus:ring-1 focus:ring-electric-blue transition-all"
                 placeholder="Acme Inc."
                 disabled={submitting}
                 required
@@ -438,83 +231,40 @@ export function SignupForm({
 
           {/* Country field */}
           <div>
-            <label
-              htmlFor="country"
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                color: "#0f766e",
-                marginBottom: "0.5rem",
-              }}
-            >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Country
             </label>
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: 0,
-                  paddingLeft: "0.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  pointerEvents: "none",
-                  zIndex: 1,
-                }}
-              >
-                <Globe style={{ width: "1.25rem", height: "1.25rem", color: "#5eead4" }} />
+            <div className="relative">
+              <div className="absolute top-0 bottom-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <Globe className="w-5 h-5 text-gray-500" />
               </div>
               <select
                 id="country"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                style={{ ...inputStyle, cursor: "pointer", appearance: "none" as const }}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
+                className="w-full pl-10 pr-4 py-3 bg-navy-900/50 border border-white/10 rounded-xl text-white focus:border-electric-blue focus:ring-1 focus:ring-electric-blue transition-all appearance-none cursor-pointer"
                 disabled={submitting}
                 required
               >
-                <option value="US">United States</option>
+                <option value="US" className="bg-navy-900 text-white">United States</option>
               </select>
             </div>
           </div>
 
           {/* Terms checkbox */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+          <div className="flex items-start gap-3 mt-2">
             <input
               id="acceptTerms"
               type="checkbox"
               checked={acceptTerms}
               onChange={(e) => setAcceptTerms(e.target.checked)}
-              style={{
-                marginTop: "0.25rem",
-                width: "1rem",
-                height: "1rem",
-                borderColor: "#5eead4",
-                accentColor: "#14b8a6",
-                cursor: "pointer",
-              }}
+              className="mt-1 w-4 h-4 rounded border-white/20 bg-navy-900 text-electric-blue focus:ring-electric-blue cursor-pointer accent-electric-blue"
               disabled={submitting}
               required
             />
-            <label
-              htmlFor="acceptTerms"
-              style={{
-                fontSize: "0.875rem",
-                color: "#0f766e",
-                cursor: "pointer",
-              }}
-            >
+            <label htmlFor="acceptTerms" className="text-sm text-gray-400 cursor-pointer">
               I accept the{" "}
-              <a
-                href="#"
-                style={{
-                  color: "#0d9488",
-                  textDecoration: "underline",
-                }}
-              >
+              <a href="#" className="text-electric-blue hover:text-white underline transition-colors">
                 Terms & Privacy Policy
               </a>
             </label>
@@ -522,19 +272,9 @@ export function SignupForm({
 
           {/* Error message */}
           {displayError && (
-            <div
-              style={{
-                padding: "0.75rem",
-                backgroundColor: "#fef2f2",
-                border: "1px solid #fecaca",
-                borderRadius: "0.5rem",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "0.5rem",
-              }}
-            >
-              <AlertCircle style={{ width: "1.25rem", height: "1.25rem", color: "#dc2626", flexShrink: 0, marginTop: "0.125rem" }} />
-              <p style={{ fontSize: "0.875rem", color: "#991b1b" }}>{displayError}</p>
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-400">{displayError}</p>
             </div>
           )}
 
@@ -542,47 +282,18 @@ export function SignupForm({
           <button
             type="submit"
             disabled={submitting || !acceptTerms}
-            style={{
-              width: "100%",
-              padding: "0.75rem 1rem",
-              backgroundColor: submitting || !acceptTerms ? "#0d9488" : "#14b8a6",
-              color: "#ffffff",
-              fontWeight: 500,
-              borderRadius: "0.5rem",
-              border: "none",
-              fontSize: "0.9375rem",
-              cursor: submitting || !acceptTerms ? "not-allowed" : "pointer",
-              opacity: submitting || !acceptTerms ? 0.7 : 1,
-              transition: "background-color 0.2s ease",
-              fontFamily: "inherit",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-            }}
-            onMouseEnter={(e) => {
-              if (!submitting && acceptTerms) {
-                e.currentTarget.style.backgroundColor = "#0d9488";
+            className={`
+              w-full py-3 px-4 rounded-xl font-medium text-white shadow-lg transition-all duration-300 mt-2
+              ${submitting || !acceptTerms 
+                ? 'bg-gray-600 cursor-not-allowed opacity-70' 
+                : 'bg-gradient-to-r from-electric-blue to-purple-600 hover:shadow-electric-blue/25 hover:scale-[1.02]'
               }
-            }}
-            onMouseLeave={(e) => {
-              if (!submitting && acceptTerms) {
-                e.currentTarget.style.backgroundColor = "#14b8a6";
-              }
-            }}
+              flex items-center justify-center gap-2
+            `}
           >
             {submitting ? (
               <>
-                <div
-                  style={{
-                    width: "1rem",
-                    height: "1rem",
-                    border: "2px solid rgba(255, 255, 255, 0.3)",
-                    borderTop: "2px solid #ffffff",
-                    borderRadius: "50%",
-                    animation: "spin 1s linear infinite",
-                  }}
-                ></div>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 Creating account...
               </>
             ) : (
@@ -592,29 +303,19 @@ export function SignupForm({
         </form>
 
         {/* Login link */}
-        <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
-          <p style={{ fontSize: "0.875rem", color: "#0d9488" }}>
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-400">
             Already have an account?{" "}
             <button
               type="button"
               onClick={onNavigateToLogin}
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                color: "#0f766e",
-                fontWeight: 500,
-                textDecoration: "underline",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                fontSize: "inherit",
-              }}
+              className="font-medium text-electric-blue hover:text-white transition-colors"
             >
               Log in
             </button>
           </p>
         </div>
-      </div>
-    </div>
+      </SpotlightCard>
+    </motion.div>
   );
 }
