@@ -2,7 +2,7 @@
  * Main App component with routing
  */
 
-import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/use-auth.js";
 import { ProtectedRoute } from "./components/auth/protected-route.js";
 import { LoginPage } from "./pages/login.js";
@@ -14,6 +14,7 @@ import ContractTest from "./components/ContractTest";
 import { AgentIdentity } from "./components/AgentIdentity";
 import { ParticleBackground } from "./components/ParticleBackground";
 import { UserMenu } from "./components/auth/user-menu.js";
+import { BackButton } from "./components/ui/back-button.js";
 import "./App.css";
 import type { MeteringInfo } from "./lib/api.js";
 
@@ -108,6 +109,9 @@ function AppRoutes() {
  * App layout wrapper with header and footer
  */
 function AppLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const showBackButton = location.pathname !== "/" && location.pathname !== "/treasury-dashboard";
+
   return (
     <>
       <ParticleBackground />
@@ -115,14 +119,21 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Header */}
         <header className="header sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-slate-200 shadow-sm">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <Link
-              to="/"
-              className="logo flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity no-underline hover:no-underline"
-              aria-label="SnowRail home"
-            >
-              <span className="logo-icon text-2xl">❄️</span>
-              <span className="logo-text font-bold text-xl tracking-tight text-slate-900">SnowRail</span>
-            </Link>
+            <div className="flex items-center gap-3">
+              {showBackButton && (
+                <div className="flex-shrink-0">
+                  <BackButton iconOnly={true} />
+                </div>
+              )}
+              <Link
+                to="/"
+                className="logo flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity no-underline hover:no-underline"
+                aria-label="SnowRail home"
+              >
+                <span className="logo-icon text-2xl">❄️</span>
+                <span className="logo-text font-bold text-xl tracking-tight text-slate-900">SnowRail</span>
+              </Link>
+            </div>
             <div className="header-meta flex items-center gap-4">
               <span className="chain-badge inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-sm font-medium text-slate-600">
                 <span className="chain-dot w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>

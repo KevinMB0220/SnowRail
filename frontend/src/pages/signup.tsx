@@ -9,6 +9,7 @@ import { useAuth } from "../hooks/use-auth.js";
 import { SignupForm } from "../components/auth/signup-form.js";
 import { ParticleBackground } from "../components/ParticleBackground.js";
 import { SuccessMessage } from "../components/auth/success-message.js";
+import { BackButton } from "../components/ui/back-button.js";
 
 export function SignupPage() {
   const navigate = useNavigate();
@@ -53,6 +54,9 @@ export function SignupPage() {
         {/* Main Content */}
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div style={{ width: "100%", maxWidth: "28rem", margin: "0 auto" }}>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <BackButton onClick={() => navigate("/login")} />
+            </div>
             {successMessage && (
               <div style={{ marginBottom: "1rem" }}>
                 <SuccessMessage message={successMessage} />

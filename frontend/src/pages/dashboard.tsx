@@ -7,14 +7,13 @@ import { useDashboard } from "../hooks/use-dashboard.js";
 import { BalanceCard } from "../components/dashboard/balance-card.js";
 import { RecentPayments } from "../components/dashboard/recent-payments.js";
 import { PaymentSimulator } from "../components/dashboard/mock-payment-simulator.js";
-import { RefreshCw, AlertCircle, CheckCircle2, Info, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { BackButton } from "../components/ui/back-button.js";
+import { RefreshCw, AlertCircle, CheckCircle2, Info } from "lucide-react";
 import { useAuth } from "../hooks/use-auth.js";
 
 export default function Dashboard() {
   const { data, isLoading, error, refetch } = useDashboard();
   const { company } = useAuth();
-  const navigate = useNavigate();
 
   // Show loading state
   if (isLoading) {
@@ -52,17 +51,20 @@ export default function Dashboard() {
   // Show error state
   if (error) {
     return (
-      <div className="card p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-teal-900 mb-2">Error loading dashboard</h2>
-        <p className="text-teal-600 mb-6">{error}</p>
-        <button
-          onClick={() => refetch()}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-        >
-          <RefreshCw size={16} />
-          Try again
-        </button>
+      <div className="space-y-6">
+        <BackButton />
+        <div className="card p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-teal-900 mb-2">Error loading dashboard</h2>
+          <p className="text-teal-600 mb-6">{error}</p>
+          <button
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            <RefreshCw size={16} />
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
@@ -70,12 +72,15 @@ export default function Dashboard() {
   // Show empty state if no data
   if (!data) {
     return (
-      <div className="card p-8 text-center">
-        <Info className="w-12 h-12 text-teal-500 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-teal-900 mb-2">Welcome to SnowRail</h2>
-        <p className="text-teal-600 mb-6">
-          Start receiving x402 payments to see your balances and transaction history here.
-        </p>
+      <div className="space-y-6">
+        <BackButton />
+        <div className="card p-8 text-center">
+          <Info className="w-12 h-12 text-teal-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-teal-900 mb-2">Welcome to SnowRail</h2>
+          <p className="text-teal-600 mb-6">
+            Start receiving x402 payments to see your balances and transaction history here.
+          </p>
+        </div>
       </div>
     );
   }
@@ -92,6 +97,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <BackButton />
+
       {/* Header with Company Info */}
       <div className="card p-6">
         <div className="flex items-center justify-between">
@@ -119,7 +127,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Status Banners */}
+      {/* KYB Status Card - MVP Notice */}
       {showKybBanner && (
         <div className="card p-6">
           <div className="flex items-start gap-4">
@@ -128,19 +136,11 @@ export default function Dashboard() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-bold text-teal-900 mb-2">
-                Verification Required
+                Verification Status
               </h3>
-              <p className="text-sm text-teal-700 mb-4 leading-relaxed">
-                Complete KYB verification to enable withdrawals. This is required before you can
-                create a Rail account and withdraw funds.
+              <p className="text-sm text-teal-700 leading-relaxed">
+                KYB/KYC verification is not included in the current MVP scope. This feature will be implemented in future releases as part of our roadmap.
               </p>
-              <button
-                onClick={() => navigate("/settings")}
-                className="btn btn-primary"
-              >
-                Start Verification
-                <ArrowRight size={18} />
-              </button>
             </div>
           </div>
         </div>
@@ -159,13 +159,6 @@ export default function Dashboard() {
               <p className="text-sm text-teal-700 mb-4 leading-relaxed">
                 Your company is verified. Create your USD account in Rail to enable withdrawals.
               </p>
-              <button
-                onClick={() => navigate("/settings")}
-                className="btn btn-primary"
-              >
-                Create Rail Account
-                <ArrowRight size={18} />
-              </button>
             </div>
           </div>
         </div>

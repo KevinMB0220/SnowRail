@@ -80,6 +80,28 @@ export function CoreWalletButton({
     }
   }, [provider])
 
+  const disconnectWallet = useCallback(() => {
+    setAccount(null)
+    setStatus('idle')
+    setError(null)
+    // Optionally try to disconnect from provider if it has a disconnect method
+    if (provider && typeof (provider as any).disconnect === 'function') {
+      try {
+        (provider as any).disconnect()
+      } catch (err) {
+        // Ignore disconnect errors
+      }
+    }
+  }, [provider])
+
+  const handleClick = useCallback(() => {
+    if (status === 'connected' && account) {
+      disconnectWallet()
+    } else {
+      connectWallet()
+    }
+  }, [status, account, connectWallet, disconnectWallet])
+
   const label = useMemo<ReactNode>(() => {
     if (status === 'connecting') {
       return 'Conectando...'
@@ -119,15 +141,26 @@ export function CoreWalletButton({
     style.color = '#0f766e'
   }
 
+  // Show disconnect option when connected
+  const buttonContent = account ? (
+    <div className="flex items-center gap-2">
+      <span>{label}</span>
+      <span className="text-xs opacity-70">(click to disconnect)</span>
+    </div>
+  ) : (
+    label
+  )
+
   const content = (
     <button
       type="button"
-      onClick={connectWallet}
+      onClick={handleClick}
       disabled={status === 'connecting'}
       className={className}
       style={style}
+      title={account ? 'Click to disconnect wallet' : 'Click to connect wallet'}
     >
-      {label}
+      {buttonContent}
     </button>
   )
 
