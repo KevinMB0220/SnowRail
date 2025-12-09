@@ -46,7 +46,7 @@ router.get("/activity", async (req: Request, res: Response) => {
       status: string;
       total: number;
       currency: string;
-      payments: Array<{ id: string; amount: number; recipient: string | null; status: string }>;
+      payments: Array<{ id: string; amount: number; recipient: string | null; status: string; txHash: string | null }>;
       createdAt: Date;
       updatedAt: Date;
     };
@@ -59,7 +59,7 @@ router.get("/activity", async (req: Request, res: Response) => {
         id: payroll.id,
         type: "payroll_execution",
         status: payroll.status,
-        totalAmount: payroll.total,
+        totalAmount: Number(payroll.total),
         currency: payroll.currency,
         recipientCount: payroll.payments.length,
         createdAt: payroll.createdAt.toISOString(),
@@ -81,9 +81,9 @@ router.get("/activity", async (req: Request, res: Response) => {
           }
         },
         // Payment details
-        payments: payroll.payments.map((payment: { id: string; amount: number; recipient: string | null; status: string }) => ({
+        payments: payroll.payments.map((payment) => ({
           id: payment.id,
-          amount: payment.amount,
+          amount: Number(payment.amount),
           recipient: payment.recipient,
           status: payment.status
         }))
@@ -93,7 +93,7 @@ router.get("/activity", async (req: Request, res: Response) => {
     // Summary stats
     const stats = {
       totalPayrolls: payrolls.length,
-      totalPaid: payrolls.reduce((sum: number, p: PayrollWithPayments) => sum + p.total, 0),
+      totalPaid: payrolls.reduce((sum: number, p: PayrollWithPayments) => sum + Number(p.total), 0),
       totalRecipients: payrolls.reduce((sum: number, p: PayrollWithPayments) => sum + p.payments.length, 0),
       lastActivity: payrolls[0]?.createdAt.toISOString() || null
     };
@@ -106,9 +106,19 @@ router.get("/activity", async (req: Request, res: Response) => {
 
   } catch (error) {
     logger.error("Error fetching agent activity", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error("Agent activity error details:", {
+      message: errorMessage,
+      stack: errorStack,
+      error: error
+    });
+    
     res.status(500).json({
       error: "Failed to fetch activity",
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: errorMessage,
+      ...(process.env.NODE_ENV === "development" && { stack: errorStack })
     });
   }
 });
@@ -153,8 +163,8 @@ router.get("/stats", async (req: Request, res: Response) => {
       }
     });
 
-    // Total recipients
-    const totalRecipients = await prisma.payment.count();
+    // Total recipients (count OutboundPayments, not inbound Payments)
+    const totalRecipients = await prisma.outboundPayment.count();
 
     type PayrollByStatus = {
       status: string;
@@ -171,8 +181,8 @@ router.get("/stats", async (req: Request, res: Response) => {
         last24h
       },
       amounts: {
-        totalPaid: totalPaid._sum.total || 0,
-        totalProcessing: totalProcessing._sum.total || 0,
+        totalPaid: Number(totalPaid._sum.total) || 0,
+        totalProcessing: Number(totalProcessing._sum.total) || 0,
         currency: "USD"
       },
       recipients: {
@@ -184,9 +194,19 @@ router.get("/stats", async (req: Request, res: Response) => {
 
   } catch (error) {
     logger.error("Error fetching agent stats", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error("Agent stats error details:", {
+      message: errorMessage,
+      stack: errorStack,
+      error: error
+    });
+    
     res.status(500).json({
       error: "Failed to fetch stats",
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: errorMessage,
+      ...(process.env.NODE_ENV === "development" && { stack: errorStack })
     });
   }
 });
