@@ -23,10 +23,13 @@ router.get("/activity", async (req: Request, res: Response) => {
   try {
     logger.info("📊 Agent activity requested");
 
-    // Get completed payrolls with payments
+    // Get payrolls with payments (include all statuses except PENDING)
+    // Show PAID, RAIL_PROCESSING, ONCHAIN_PAID, and FAILED payrolls
     const payrolls = await prisma.payroll.findMany({
       where: {
-        status: "PAID" // Solo payrolls completados
+        status: {
+          not: "PENDING" // Exclude only PENDING, show all others
+        }
       },
       include: {
         payments: true

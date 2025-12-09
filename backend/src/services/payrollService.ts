@@ -84,10 +84,22 @@ export async function executePayrollDemo() {
   }
 
   // Execute payments on-chain
+  let onchainSuccess = false;
   try {
     logger.info("Executing payments on-chain...");
     const executeTxHashes = await executePayrollPayments(payroll.id);
     logger.info(`Executed ${executeTxHashes.length} payments on-chain`);
+    onchainSuccess = executeTxHashes.length > 0;
+    
+    // If on-chain execution was successful, mark as ONCHAIN_PAID
+    if (onchainSuccess) {
+      await prisma.payroll.update({
+        where: { id: payroll.id },
+        data: { status: PayrollStatus.ONCHAIN_PAID },
+      });
+      await updatePayrollPaymentsStatus(payroll.id, PaymentStatus.ONCHAIN_PAID);
+      logger.info("Payroll marked as ONCHAIN_PAID");
+    }
   } catch (error) {
     logger.error("Failed to execute payments on-chain", error);
     // Continue even if execution fails, status will be updated accordingly
@@ -95,11 +107,13 @@ export async function executePayrollDemo() {
 
   // Process through Rail (optional - can be done asynchronously)
   try {
-    await prisma.payroll.update({
-      where: { id: payroll.id },
-      data: { status: PayrollStatus.RAIL_PROCESSING },
-    });
-    await updatePayrollPaymentsStatus(payroll.id, PaymentStatus.RAIL_PROCESSING);
+    if (onchainSuccess) {
+      await prisma.payroll.update({
+        where: { id: payroll.id },
+        data: { status: PayrollStatus.RAIL_PROCESSING },
+      });
+      await updatePayrollPaymentsStatus(payroll.id, PaymentStatus.RAIL_PROCESSING);
+    }
     logger.info("Processing through Rail");
 
     // Call Rail API (mock)
@@ -110,10 +124,23 @@ export async function executePayrollDemo() {
     });
 
     // Final status based on Rail result
-    const finalStatus =
-      railResult.status === "PAID" ? PayrollStatus.PAID : PayrollStatus.FAILED;
-    const finalPaymentStatus =
-      railResult.status === "PAID" ? PaymentStatus.PAID : PaymentStatus.FAILED;
+    // If Rail succeeds, mark as PAID; if Rail fails but on-chain succeeded, keep ONCHAIN_PAID
+    let finalStatus: PayrollStatusType;
+    let finalPaymentStatus: PaymentStatusType;
+    
+    if (railResult.status === "PAID") {
+      finalStatus = PayrollStatus.PAID;
+      finalPaymentStatus = PaymentStatus.PAID;
+    } else if (onchainSuccess) {
+      // On-chain succeeded but Rail failed - keep as ONCHAIN_PAID
+      finalStatus = PayrollStatus.ONCHAIN_PAID;
+      finalPaymentStatus = PaymentStatus.ONCHAIN_PAID;
+      logger.info("Rail processing failed, but on-chain payment succeeded - keeping ONCHAIN_PAID status");
+    } else {
+      // Both failed
+      finalStatus = PayrollStatus.FAILED;
+      finalPaymentStatus = PaymentStatus.FAILED;
+    }
 
     const updatedPayroll = await prisma.payroll.update({
       where: { id: payroll.id },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sparkles, Copy, Check, ExternalLink, Shield, Database, Activity, Clock, Users, DollarSign, Archive, TrendingUp } from "lucide-react";
+import { Sparkles, Copy, Check, ExternalLink, Shield, Database, Activity, Clock, Users, DollarSign, Archive, TrendingUp, RefreshCw } from "lucide-react";
 import { getApiBase } from "../utils/api-config.js";
 
 interface AgentCapabilities {
@@ -91,6 +91,18 @@ export function AgentIdentity() {
 
   useEffect(() => {
     fetchAll();
+  }, []);
+
+  // Refresh data when component becomes visible (e.g., after navigation)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchAll();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const fetchAll = async () => {
@@ -286,7 +298,18 @@ export function AgentIdentity() {
         {/* Activity Tab */}
         {activeTab === "activity" && activity && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Executions</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Recent Executions</h3>
+              <button
+                onClick={fetchAll}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh data"
+              >
+                <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                Refresh
+              </button>
+            </div>
             
             {activity.activity.length === 0 ? (
               <div className="text-center py-12">
