@@ -116,30 +116,47 @@ export async function executePayrollDemo() {
     }
     logger.info("Processing through Rail");
 
-    // Call Rail API (mock)
+    // Call Rail API (mock or real)
     const railResult = await createRailPayment({
       payrollId: payroll.id,
       amount: total,
       currency,
     });
 
-    // Final status based on Rail result
-    // If Rail succeeds, mark as PAID; if Rail fails but on-chain succeeded, keep ONCHAIN_PAID
+    logger.info(`Rail result: status=${railResult.status}, onchainSuccess=${onchainSuccess}`);
+
+    // Final status based on Rail result and on-chain success
+    // Priority: If on-chain succeeded, at minimum mark as ONCHAIN_PAID
+    // If Rail also succeeded, mark as PAID
     let finalStatus: PayrollStatusType;
     let finalPaymentStatus: PaymentStatusType;
     
-    if (railResult.status === "PAID") {
-      finalStatus = PayrollStatus.PAID;
-      finalPaymentStatus = PaymentStatus.PAID;
-    } else if (onchainSuccess) {
-      // On-chain succeeded but Rail failed - keep as ONCHAIN_PAID
-      finalStatus = PayrollStatus.ONCHAIN_PAID;
-      finalPaymentStatus = PaymentStatus.ONCHAIN_PAID;
-      logger.info("Rail processing failed, but on-chain payment succeeded - keeping ONCHAIN_PAID status");
+    if (onchainSuccess) {
+      // On-chain payment was successful
+      if (railResult.status === "PAID") {
+        // Both succeeded - mark as PAID
+        finalStatus = PayrollStatus.PAID;
+        finalPaymentStatus = PaymentStatus.PAID;
+        logger.info("Both on-chain and Rail succeeded - marking as PAID");
+      } else {
+        // On-chain succeeded but Rail failed/processing - mark as ONCHAIN_PAID
+        finalStatus = PayrollStatus.ONCHAIN_PAID;
+        finalPaymentStatus = PaymentStatus.ONCHAIN_PAID;
+        logger.info(`Rail status: ${railResult.status}, but on-chain succeeded - marking as ONCHAIN_PAID`);
+      }
     } else {
-      // Both failed
-      finalStatus = PayrollStatus.FAILED;
-      finalPaymentStatus = PaymentStatus.FAILED;
+      // On-chain failed
+      if (railResult.status === "PAID") {
+        // Rail succeeded but on-chain failed - this shouldn't happen, but mark as FAILED
+        finalStatus = PayrollStatus.FAILED;
+        finalPaymentStatus = PaymentStatus.FAILED;
+        logger.warn("Rail succeeded but on-chain failed - marking as FAILED");
+      } else {
+        // Both failed
+        finalStatus = PayrollStatus.FAILED;
+        finalPaymentStatus = PaymentStatus.FAILED;
+        logger.warn("Both on-chain and Rail failed - marking as FAILED");
+      }
     }
 
     const updatedPayroll = await prisma.payroll.update({

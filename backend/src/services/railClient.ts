@@ -314,6 +314,7 @@ async function acceptRailWithdrawal(withdrawalId: string): Promise<void> {
 
 /**
  * Mock implementation (fallback)
+ * In demo/test mode, always return PAID to avoid false failures
  */
 async function createMockRailPayment(
   input: RailPaymentInput,
@@ -322,17 +323,9 @@ async function createMockRailPayment(
   await new Promise((resolve) => setTimeout(resolve, delay));
 
   const id = `rail_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-  const success = Math.random() > 0.1;
-
-  if (!success) {
-    return {
-      id,
-      status: "FAILED",
-      createdAt: new Date().toISOString(),
-      failureReason: "MOCK_RANDOM_FAILURE",
-    };
-  }
-
+  
+  // In mock mode, always succeed (demo/test behavior)
+  // Real Rail API will return actual status
   return {
     id,
     status: "PAID",
