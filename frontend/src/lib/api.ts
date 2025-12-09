@@ -93,7 +93,35 @@ export async function executePayroll(paymentToken?: string): Promise<{
     headers,
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get("content-type");
+  let data: any;
+
+  if (contentType && contentType.includes("application/json")) {
+    try {
+      data = await response.json();
+    } catch (error) {
+      console.error("Failed to parse JSON response:", error);
+      return {
+        success: false,
+        status: response.status,
+        error: {
+          error: "INVALID_RESPONSE",
+          message: `Server returned invalid JSON: ${response.status} ${response.statusText}`,
+        } as ApiError,
+      };
+    }
+  } else {
+    const text = await response.text();
+    console.error("Non-JSON response:", text.substring(0, 200));
+    return {
+      success: false,
+      status: response.status,
+      error: {
+        error: "INVALID_RESPONSE",
+        message: `Server returned non-JSON response: ${response.status} ${response.statusText}`,
+      } as ApiError,
+    };
+  }
 
   if (!response.ok) {
     return {

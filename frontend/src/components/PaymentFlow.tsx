@@ -35,12 +35,14 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
     setError(null);
 
     try {
+      console.log("Getting payment proof from facilitator...");
       // Get payment proof from facilitator
       const proof = await getPaymentProofFromFacilitator(
         FACILITATOR_URL,
         metering,
         meterId
       );
+      console.log("Payment proof obtained:", proof ? "✓" : "✗");
       
       setStep("validating");
       
@@ -49,19 +51,30 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
       
       // Execute payroll with payment proof
       setStep("executing");
+      console.log("Executing payroll with proof...");
       const result = await executePayroll(proof);
+      console.log("Payroll execution result:", result);
 
       if (result.success) {
+        console.log("Payroll executed successfully:", result.data);
         setStep("success");
         // Small delay before redirecting
         setTimeout(() => {
+          console.log("Navigating to agent identity...");
           onSuccess(result.data.payrollId);
         }, 1000);
       } else {
-        setError(result.error.message || "Payment validation failed");
+        console.error("Payroll execution failed:", result);
+        // If we get 402 again, it means the payment proof was invalid
+        if (result.status === 402) {
+          setError(result.error.message || "Payment validation failed. Please try again.");
+        } else {
+          setError(result.error.message || "Payment validation failed");
+        }
         setStep("review");
       }
     } catch (err) {
+      console.error("Error in payment flow:", err);
       setError(err instanceof Error ? err.message : "Failed to process payment");
       setStep("review");
     }
