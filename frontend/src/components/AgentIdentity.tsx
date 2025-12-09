@@ -326,14 +326,25 @@ export function AgentIdentity() {
             ) : (
               <div className="space-y-4">
                 {activity.activity.map((item) => (
-                  <div key={item.id} className="card p-4 hover:border-teal-300 transition-colors">
+                    <div key={item.id} className="card p-4 hover:border-teal-300 transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-mono text-sm text-gray-700">{item.id}</span>
-                          <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-medium">
-                            ✓ {item.status}
-                          </span>
+                          {(() => {
+                            const status = item.status;
+                            if (status === "PAID") {
+                              return <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-medium">✓ Paid</span>;
+                            } else if (status === "ONCHAIN_PAID") {
+                              return <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-medium">✓ On-Chain Paid</span>;
+                            } else if (status === "RAIL_PROCESSING") {
+                              return <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 text-xs font-medium">⏳ Processing</span>;
+                            } else if (status === "FAILED") {
+                              return <span className="px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-medium">✗ Failed</span>;
+                            } else {
+                              return <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-medium">{status}</span>;
+                            }
+                          })()}
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                           <span className="flex items-center gap-1">

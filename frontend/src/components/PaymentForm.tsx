@@ -490,22 +490,48 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
                         </ul>
                       </div>
 
-                      {(result.transactions?.request_tx_hashes?.length || 0) > 0 && (
+                      {((result.transactions?.request_tx_hashes?.length || 0) > 0 || (result.transactions?.execute_tx_hashes?.length || 0) > 0) && (
                         <div>
                           <h4 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-4 pb-2 border-b border-teal-100">Transactions</h4>
-                          <div className="space-y-3">
-                            {result.transactions?.request_tx_hashes?.map((hash, idx) => (
-                              <a
-                                key={idx}
-                                href={`https://testnet.snowtrace.io/tx/${hash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-3 text-sm text-teal-600 hover:text-teal-800 hover:underline truncate p-3 bg-teal-50 rounded-lg transition-colors"
-                              >
-                                <ExternalLink size={16} />
-                                <span className="truncate font-mono">{hash}</span>
-                              </a>
-                            ))}
+                          <div className="space-y-4">
+                            {result.transactions?.request_tx_hashes && result.transactions.request_tx_hashes.length > 0 && (
+                              <div>
+                                <h5 className="text-xs font-semibold text-teal-600 uppercase tracking-wider mb-2">Request Transactions</h5>
+                                <div className="space-y-2">
+                                  {result.transactions.request_tx_hashes.map((hash, idx) => (
+                                    <a
+                                      key={`request-${idx}`}
+                                      href={`https://testnet.snowtrace.io/tx/${hash}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-3 text-sm text-teal-600 hover:text-teal-800 hover:underline truncate p-3 bg-teal-50 rounded-lg transition-colors"
+                                    >
+                                      <ExternalLink size={16} />
+                                      <span className="truncate font-mono">{hash}</span>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {result.transactions?.execute_tx_hashes && result.transactions.execute_tx_hashes.length > 0 && (
+                              <div>
+                                <h5 className="text-xs font-semibold text-teal-600 uppercase tracking-wider mb-2">Execute Transactions</h5>
+                                <div className="space-y-2">
+                                  {result.transactions.execute_tx_hashes.map((hash, idx) => (
+                                    <a
+                                      key={`execute-${idx}`}
+                                      href={`https://testnet.snowtrace.io/tx/${hash}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-3 text-sm text-teal-600 hover:text-teal-800 hover:underline truncate p-3 bg-teal-50 rounded-lg transition-colors"
+                                    >
+                                      <ExternalLink size={16} />
+                                      <span className="truncate font-mono">{hash}</span>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}

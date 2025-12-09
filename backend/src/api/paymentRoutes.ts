@@ -304,7 +304,7 @@ export function registerPaymentRoutes(app: Express) {
             railResult.status = railPaymentResult.status;
 
             // Update final status based on Rail result
-            // PENDING, PROCESSING are valid states - only mark as FAILED if status is actually FAILED
+            // If on-chain was successful, prioritize that - Rail is optional
             let finalStatus: PayrollStatusType;
             let finalPaymentStatus: PaymentStatusType;
             
@@ -312,12 +312,25 @@ export function registerPaymentRoutes(app: Express) {
               finalStatus = PayrollStatus.PAID;
               finalPaymentStatus = PaymentStatus.PAID;
             } else if (railPaymentResult.status === "FAILED") {
-              finalStatus = PayrollStatus.FAILED;
-              finalPaymentStatus = PaymentStatus.FAILED;
+              // If Rail failed but on-chain succeeded, mark as ONCHAIN_PAID (not FAILED)
+              if (steps.onchain_executed) {
+                finalStatus = PayrollStatus.ONCHAIN_PAID;
+                finalPaymentStatus = PaymentStatus.ONCHAIN_PAID;
+              } else {
+                // Both failed
+                finalStatus = PayrollStatus.FAILED;
+                finalPaymentStatus = PaymentStatus.FAILED;
+              }
             } else {
-              // PENDING, PROCESSING, etc. - valid states, mark as RAIL_PROCESSING
-              finalStatus = PayrollStatus.RAIL_PROCESSING;
-              finalPaymentStatus = PaymentStatus.RAIL_PROCESSING;
+              // PENDING, PROCESSING, etc. - valid states
+              // If on-chain succeeded, mark as ONCHAIN_PAID, otherwise RAIL_PROCESSING
+              if (steps.onchain_executed) {
+                finalStatus = PayrollStatus.ONCHAIN_PAID;
+                finalPaymentStatus = PaymentStatus.ONCHAIN_PAID;
+              } else {
+                finalStatus = PayrollStatus.RAIL_PROCESSING;
+                finalPaymentStatus = PaymentStatus.RAIL_PROCESSING;
+              }
             }
 
             await prisma.payroll.update({
