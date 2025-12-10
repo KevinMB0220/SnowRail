@@ -14,21 +14,10 @@ import { motion, AnimatePresence } from "framer-motion";
 export function UserMenu() {
   const navigate = useNavigate();
   const { user, company, logout } = useAuth();
-  const { isConnected, account, disconnectWallet, checkConnection } = useCoreWallet();
+  const { isConnected, account, disconnectWallet } = useCoreWallet();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Re-check wallet connection when menu opens to handle cache issues
-  useEffect(() => {
-    if (isOpen) {
-      // Force re-check connection state without triggering popup
-      // This ensures state is up-to-date when menu opens
-      const timer = setTimeout(() => {
-        checkConnection();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, checkConnection]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -142,28 +131,23 @@ export function UserMenu() {
 
             {/* Menu items */}
             <div className="p-2 bg-navy-950/95">
-              {/* Disconnect wallet button - always show when wallet is connected */}
-              {isConnected && account ? (
+              {/* Disconnect wallet button - show when wallet is connected */}
+              {isConnected && account && (
                 <button
                   onClick={() => {
                     disconnectWallet();
                     setIsOpen(false);
                   }}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 hover:text-orange-300 transition-all duration-200 mb-2 border border-orange-500/30 hover:border-orange-500/50 shadow-sm hover:shadow-orange-500/20"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 transition-colors mb-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <X className="w-4 h-4" />
-                    <span>Disconnect Wallet</span>
-                  </div>
-                  <span className="text-xs text-orange-400/70 truncate max-w-[100px]">
-                    {account.slice(0, 6)}...{account.slice(-4)}
-                  </span>
+                  <X className="w-4 h-4" />
+                  <span>Disconnect Wallet</span>
                 </button>
-              ) : null}
+              )}
               
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 border border-red-500/30 hover:border-red-500/50 shadow-sm hover:shadow-red-500/20"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign out</span>
