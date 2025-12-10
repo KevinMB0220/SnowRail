@@ -86,16 +86,20 @@ export function UserMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-[calc(100%+0.5rem)] w-72 bg-navy-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 glass-panel"
+            className="absolute right-0 top-[calc(100%+0.5rem)] w-72 bg-gradient-to-b from-navy-900 via-navy-900 to-navy-950 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden z-50"
+            style={{
+              background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 1) 100%)',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3)'
+            }}
           >
             {/* User info section */}
-            <div className="p-4 border-b border-white/5 bg-white/5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-electric-blue to-purple-600 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-electric-blue/20">
+            <div className="p-5 border-b border-white/10 bg-gradient-to-r from-navy-800/60 to-navy-800/40">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-electric-blue via-purple-600 to-electric-blue flex items-center justify-center text-white font-bold text-base shadow-lg shadow-electric-blue/30 ring-2 ring-electric-blue/20">
                   {companyInitial}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white truncate">
+                  <p className="text-sm font-bold text-white truncate mb-0.5">
                     {company.legalName}
                   </p>
                   <p className="text-xs text-gray-400 truncate">
@@ -104,15 +108,20 @@ export function UserMenu() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-navy-800/50 border border-white/5 mb-3">
-                <User className="w-3.5 h-3.5 text-electric-blue" />
-                <span className="text-xs font-medium text-gray-300">
+              <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-navy-900/60 border border-electric-blue/20 mb-3 backdrop-blur-sm">
+                <div className="p-1.5 bg-electric-blue/10 rounded-md">
+                  <User className="w-3.5 h-3.5 text-electric-blue" />
+                </div>
+                <span className="text-xs font-medium text-gray-200">
                   Account active
                 </span>
+                <div className="ml-auto w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50"></div>
               </div>
               
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-navy-800/50 border border-white/5">
-                <Wallet className="w-3.5 h-3.5 text-electric-blue" />
+              <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-navy-900/60 border border-electric-blue/20 backdrop-blur-sm">
+                <div className="p-1.5 bg-electric-blue/10 rounded-md">
+                  <Wallet className="w-3.5 h-3.5 text-electric-blue" />
+                </div>
                 <div className="flex-1">
                   <CoreWalletButton variant="text" showDisconnect={true} />
                 </div>
@@ -120,12 +129,12 @@ export function UserMenu() {
             </div>
 
             {/* Menu items */}
-            <div className="p-2">
+            <div className="p-2 bg-navy-950/95">
               {/* Disconnect wallet button - only show when connected */}
               {isConnected && account && (
                 <button
                   onClick={disconnectWallet}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 transition-colors mb-2"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-orange-400 hover:bg-orange-500/15 hover:text-orange-300 transition-all duration-200 mb-2 border border-transparent hover:border-orange-500/20"
                 >
                   <X className="w-4 h-4" />
                   <span>Disconnect Wallet</span>
@@ -134,7 +143,7 @@ export function UserMenu() {
               
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 border border-transparent hover:border-red-500/20"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign out</span>
