@@ -52,8 +52,13 @@ export function useCoreWallet() {
 
     const handleAccountsChanged = (accounts: string[]) => {
       const nextAccount = accounts[0] ?? null;
-      setAccount(nextAccount);
-      setStatus(nextAccount ? 'connected' : 'idle');
+      if (nextAccount) {
+        setAccount(nextAccount);
+        setStatus('connected');
+      } else {
+        setAccount(null);
+        setStatus('idle');
+      }
       setError(null);
     };
 
@@ -62,6 +67,27 @@ export function useCoreWallet() {
     return () => {
       provider.removeListener?.('accountsChanged', handleAccountsChanged);
     };
+  }, [provider]);
+
+  // Helper to check current accounts
+  const checkAccounts = useCallback(async () => {
+    if (!provider) return;
+    
+    try {
+      const accounts = (await provider.request({ method: 'eth_accounts' })) as string[];
+      const connectedAccount = accounts?.[0] ?? null;
+      
+      if (connectedAccount) {
+        setAccount(connectedAccount);
+        setStatus('connected');
+      } else {
+        setAccount(null);
+        setStatus('idle');
+      }
+    } catch {
+      setAccount(null);
+      setStatus('idle');
+    }
   }, [provider]);
 
   // Connect wallet
@@ -81,12 +107,19 @@ export function useCoreWallet() {
       const connectedAccount = accounts?.[0];
 
       if (!connectedAccount) {
+        setAccount(null);
         setStatus('idle');
         return;
       }
 
+      // Update state immediately
       setAccount(connectedAccount);
       setStatus('connected');
+      
+      // Double-check to ensure state is correct
+      setTimeout(() => {
+        checkAccounts();
+      }, 100);
     } catch (err) {
       setStatus('error');
       setError(
@@ -94,15 +127,22 @@ export function useCoreWallet() {
           ? err.message
           : 'No se pudo conectar con Core Wallet.',
       );
+      setAccount(null);
     }
-  }, [provider]);
+  }, [provider, checkAccounts]);
 
   // Disconnect wallet
   const disconnectWallet = useCallback(() => {
+    // Clear state immediately
     setAccount(null);
     setStatus('idle');
     setError(null);
-  }, []);
+    
+    // Verify the disconnect actually happened
+    setTimeout(() => {
+      checkAccounts();
+    }, 50);
+  }, [checkAccounts]);
 
   return {
     account,

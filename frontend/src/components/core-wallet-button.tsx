@@ -31,12 +31,12 @@ export function CoreWalletButton({
       return 'Conectando...'
     }
 
-    if (account) {
+    if (isConnected && account) {
       return truncateAddress(account)
     }
 
     return 'Connect Core Wallet'
-  }, [account, isConnecting])
+  }, [account, isConnected, isConnecting])
 
   const isTextVariant = variant === 'text'
 
@@ -66,7 +66,7 @@ export function CoreWalletButton({
   }
 
   // Show disconnect option when connected and showDisconnect is false (legacy behavior)
-  const buttonContent = account && !showDisconnect ? (
+  const buttonContent = isConnected && account && !showDisconnect ? (
     <div className="flex items-center gap-2">
       <span>{label}</span>
       <span className="text-xs opacity-70">(click to disconnect)</span>
@@ -82,7 +82,7 @@ export function CoreWalletButton({
       disabled={isConnecting}
       className={className}
       style={style}
-      title={account ? 'Click to disconnect wallet' : 'Click to connect wallet'}
+      title={isConnected && account ? 'Click to disconnect wallet' : 'Click to connect wallet'}
     >
       {buttonContent}
     </button>
