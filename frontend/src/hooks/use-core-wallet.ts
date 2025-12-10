@@ -20,8 +20,9 @@ export function useCoreWallet() {
   const [account, setAccount] = useState<string | null>(null);
   const [status, setStatus] = useState<WalletStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [manuallyDisconnected, setManuallyDisconnected] = useState(false);
 
-  // Initialize provider and check for existing connection
+  // Initialize provider and check for existing connection (only on mount)
   useEffect(() => {
     const providerInstance = getProvider();
     setProvider(providerInstance);
@@ -36,6 +37,7 @@ export function useCoreWallet() {
           if (connectedAccount) {
             setAccount(connectedAccount);
             setStatus('connected');
+            setManuallyDisconnected(false);
           }
         })
         .catch(() => {
@@ -51,13 +53,22 @@ export function useCoreWallet() {
     }
 
     const handleAccountsChanged = (accounts: string[]) => {
+      // Only update if not manually disconnected
+      if (manuallyDisconnected && accounts.length === 0) {
+        return; // Ignore if we manually disconnected
+      }
+      
       const nextAccount = accounts[0] ?? null;
       if (nextAccount) {
         setAccount(nextAccount);
         setStatus('connected');
+        setManuallyDisconnected(false);
       } else {
-        setAccount(null);
-        setStatus('idle');
+        // Only clear if not manually disconnected
+        if (!manuallyDisconnected) {
+          setAccount(null);
+          setStatus('idle');
+        }
       }
       setError(null);
     };
@@ -67,11 +78,11 @@ export function useCoreWallet() {
     return () => {
       provider.removeListener?.('accountsChanged', handleAccountsChanged);
     };
-  }, [provider]);
+  }, [provider, manuallyDisconnected]);
 
   // Helper to check current accounts
   const checkAccounts = useCallback(async () => {
-    if (!provider) return;
+    if (!provider || manuallyDisconnected) return;
     
     try {
       const accounts = (await provider.request({ method: 'eth_accounts' })) as string[];
@@ -80,15 +91,18 @@ export function useCoreWallet() {
       if (connectedAccount) {
         setAccount(connectedAccount);
         setStatus('connected');
+        setManuallyDisconnected(false);
       } else {
         setAccount(null);
         setStatus('idle');
       }
     } catch {
-      setAccount(null);
-      setStatus('idle');
+      if (!manuallyDisconnected) {
+        setAccount(null);
+        setStatus('idle');
+      }
     }
-  }, [provider]);
+  }, [provider, manuallyDisconnected]);
 
   // Connect wallet
   const connectWallet = useCallback(async () => {
@@ -115,11 +129,7 @@ export function useCoreWallet() {
       // Update state immediately
       setAccount(connectedAccount);
       setStatus('connected');
-      
-      // Double-check to ensure state is correct
-      setTimeout(() => {
-        checkAccounts();
-      }, 100);
+      setManuallyDisconnected(false);
     } catch (err) {
       setStatus('error');
       setError(
@@ -133,16 +143,13 @@ export function useCoreWallet() {
 
   // Disconnect wallet
   const disconnectWallet = useCallback(() => {
+    // Mark as manually disconnected
+    setManuallyDisconnected(true);
     // Clear state immediately
     setAccount(null);
     setStatus('idle');
     setError(null);
-    
-    // Verify the disconnect actually happened
-    setTimeout(() => {
-      checkAccounts();
-    }, 50);
-  }, [checkAccounts]);
+  }, []);
 
   return {
     account,
