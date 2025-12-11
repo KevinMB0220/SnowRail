@@ -7,6 +7,7 @@ Complete guide for deploying SnowRail to Avalanche Testnet (Fuji) and Mainnet.
 ## Prerequisites
 
 - Node.js 18+
+- PostgreSQL database
 - A wallet with Fuji testnet AVAX (for gas) and USDC
 - Hardhat installed globally or locally
 
@@ -77,6 +78,20 @@ The script will:
 
 ## Step 3: Configure Backend
 
+### Setup PostgreSQL Database
+
+1. **Create database:**
+```bash
+createdb snowrail
+# or using psql
+psql -c "CREATE DATABASE snowrail;"
+```
+
+2. **Set DATABASE_URL in .env:**
+```bash
+DATABASE_URL=postgresql://user:password@localhost:5432/snowrail
+```
+
 ### Fuji Testnet Configuration
 
 Update `backend/.env`:
@@ -86,7 +101,7 @@ Update `backend/.env`:
 PORT=4000
 
 # Database
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL=postgresql://user:password@localhost:5432/snowrail
 
 # Network
 NETWORK=fuji
@@ -101,10 +116,14 @@ RAIL_API_BASE_URL=https://sandbox.layer2financial.com/api
 RAIL_AUTH_URL=https://auth.layer2financial.com/oauth2/ausbdqlx69rH6OjWd696/v1/token
 RAIL_CLIENT_ID=0oaomrdnngvTiszCO697
 RAIL_CLIENT_SECRET=your_rail_secret_here
+RAIL_SOURCE_ACCOUNT_ID=your_account_id
+RAIL_COUNTERPARTY_ID=your_counterparty_id
 
 # Arweave (optional)
 ARWEAVE_JWK={"kty":"RSA","n":"..."}
 ```
+
+See [Rail Setup Instructions](RAIL_SETUP_INSTRUCTIONS.md) for Rail API configuration.
 
 ### Avalanche Mainnet Configuration
 
@@ -218,10 +237,11 @@ Options:
 
 ### Database
 
-- [ ] Migrate from SQLite to PostgreSQL
-- [ ] Set up database backups
-- [ ] Configure connection pooling
+- [ ] Set up PostgreSQL with proper credentials
+- [ ] Configure database backups
+- [ ] Set up connection pooling
 - [ ] Enable SSL connections
+- [ ] Run migrations in production
 
 ### Monitoring
 
@@ -271,7 +291,12 @@ Options:
 - **Solution**: Run `npx prisma generate`
 
 **Error**: `Migration failed`
-- **Solution**: Delete `prisma/dev.db` and run migrations again
+- **Solution**: Check PostgreSQL connection, verify DATABASE_URL
+- **Reset**: Drop and recreate database if needed
+
+**Error**: `Connection refused`
+- **Solution**: Ensure PostgreSQL is running: `pg_isready`
+- **Solution**: Check DATABASE_URL format: `postgresql://user:password@host:port/database`
 
 ---
 

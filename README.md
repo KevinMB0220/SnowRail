@@ -29,6 +29,8 @@ SnowRail is an **autonomous treasury orchestrator** that bridges crypto and fiat
 | **[API Reference](docs/API_REFERENCE.md)** | Complete endpoint documentation with examples |
 | **[Agent Interface Guide](docs/AGENT_INTERFACE.md)** | Using the agent dashboard, API, and A2A protocol |
 | **[Deployment Guide](docs/DEPLOYMENT.md)** | Step-by-step deployment to Avalanche (Fuji/Mainnet) |
+| **[Rail Setup Instructions](docs/RAIL_SETUP_INSTRUCTIONS.md)** | Configure Rail API for fiat payouts |
+| **[Payment Flow Diagram](docs/PAYMENT_FLOW_DIAGRAM.md)** | Visual flow of payment processing |
 
 ---
 
@@ -54,8 +56,8 @@ SnowRail is an **autonomous treasury orchestrator** that bridges crypto and fiat
 - **Frontend**: React app with Tailwind CSS for monitoring and execution
 - **Backend**: Express API with x402/ERC-8004 for payments and metering
 - **Smart Contracts**: `SnowRailTreasury` on Avalanche C-Chain
-- **Storage**: Arweave for permanent receipts, Prisma + SQLite/PostgreSQL for operational data
-- **Fiat Bridge**: Rail API integration (mocked in MVP)
+- **Storage**: Arweave for permanent receipts, Prisma + PostgreSQL for operational data
+- **Fiat Bridge**: Rail API integration (see [Rail Setup Instructions](docs/RAIL_SETUP_INSTRUCTIONS.md))
 
 ---
 
@@ -64,11 +66,11 @@ SnowRail is an **autonomous treasury orchestrator** that bridges crypto and fiat
 | Area       | Tech                                                    |
 |-------------|----------------------------------------------------------|
 | Backend     | Node.js, TypeScript, Express                             |
-| Database    | Prisma ORM, SQLite (dev) / PostgreSQL-ready (prod)       |
+| Database    | Prisma ORM, PostgreSQL                                   |
 | Onchain     | Ethers.js, Avalanche C-Chain                             |
 | Protocols   | x402 (HTTP 402), ERC-8004 (metering + identity), EIP-3009, A2A |
 | Storage     | Arweave (permanent receipts), Prisma (operational data)  |
-| Fiat        | Rail API (mocked client in this MVP)                     |
+| Fiat        | Rail API (sandbox/production)                           |
 | Frontend    | React, Vite, TypeScript, Tailwind CSS, Lucide React      |
 | Contracts   | Solidity ^0.8.20, Hardhat                                |
 | AI Agents   | ERC-8004 identity card, x402 facilitator, A2A endpoint   |
@@ -90,7 +92,7 @@ SnowRail is an **autonomous treasury orchestrator** that bridges crypto and fiat
       ├── server.ts         # Server entrypoint
       ├── config/           # Environment and network config
       ├── x402/             # x402 + ERC-8004 + facilitator
-      ├── api/              # Routes (payroll, treasury, agent)
+      ├── api/              # Routes (payroll, treasury, agent, merchant, dashboard, auth)
       ├── services/         # Business logic + Arweave
       ├── domain/           # Domain types
       └── utils/            # Logger, helpers
@@ -106,7 +108,9 @@ SnowRail is an **autonomous treasury orchestrator** that bridges crypto and fiat
   ├── SOVEREIGN_AGENT_STACK.md
   ├── API_REFERENCE.md
   ├── AGENT_INTERFACE.md
-  └── DEPLOYMENT.md
+  ├── DEPLOYMENT.md
+  ├── RAIL_SETUP_INSTRUCTIONS.md
+  └── PAYMENT_FLOW_DIAGRAM.md
 ```
 
 ---
@@ -116,6 +120,7 @@ SnowRail is an **autonomous treasury orchestrator** that bridges crypto and fiat
 ### Prerequisites
 
 - Node.js 18+
+- PostgreSQL database
 - A wallet with Fuji testnet AVAX and USDC (see [Deployment Guide](docs/DEPLOYMENT.md))
 
 ### 1. Clone and Install
@@ -151,26 +156,35 @@ cp env.example .env
 
 **Required variables:**
 ```bash
+PORT=4000
 NETWORK=fuji
 TREASURY_CONTRACT_ADDRESS=0xYourContractAddress
 PRIVATE_KEY=0xYourPrivateKey
 RPC_URL_AVALANCHE=https://api.avax-test.network/ext/bc/C/rpc
+DATABASE_URL=postgresql://user:password@localhost:5432/snowrail
 ```
 
 See [Deployment Guide](docs/DEPLOYMENT.md#step-3-configure-backend) for full configuration.
 
-### 4. Start Backend
+### 4. Initialize Database
 
 ```bash
 cd backend
 npm install
 npx prisma migrate dev --name init
+npx prisma generate
+```
+
+### 5. Start Backend
+
+```bash
+cd backend
 npm run dev
 ```
 
 Backend available at `http://localhost:4000`
 
-### 5. Start Frontend
+### 6. Start Frontend
 
 ```bash
 cd frontend
@@ -213,13 +227,15 @@ TREASURY_CONTRACT_ADDRESS=0xcba2318C6C4d9c98f7732c5fDe09D1BAe12c27be
 PRIVATE_KEY=0x...
 
 # Database
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL=postgresql://user:password@localhost:5432/snowrail
 
 # Rail API (Sandbox)
 RAIL_API_BASE_URL=https://sandbox.layer2financial.com/api
 RAIL_AUTH_URL=https://auth.layer2financial.com/oauth2/ausbdqlx69rH6OjWd696/v1/token
 RAIL_CLIENT_ID=0oaomrdnngvTiszCO697
 RAIL_CLIENT_SECRET=your_secret_here
+RAIL_SOURCE_ACCOUNT_ID=your_account_id
+RAIL_COUNTERPARTY_ID=your_counterparty_id
 
 # Arweave (optional)
 ARWEAVE_JWK={"kty":"RSA","n":"..."}
@@ -233,6 +249,8 @@ RPC_URL_AVALANCHE=https://api.avax.network/ext/bc/C/rpc
 TREASURY_CONTRACT_ADDRESS=0xYourMainnetAddress
 DATABASE_URL=postgresql://user:password@host:5432/snowrail
 ```
+
+See [Rail Setup Instructions](docs/RAIL_SETUP_INSTRUCTIONS.md) for Rail API configuration.
 
 See [Deployment Guide](docs/DEPLOYMENT.md) for complete configuration.
 
@@ -249,10 +267,14 @@ See [Deployment Guide](docs/DEPLOYMENT.md) for complete configuration.
 | `GET` | `/api/payroll/:id` | Get payroll details by ID |
 | `POST` | `/api/payment/process` | Process single payment (x402 protected) |
 | `GET` | `/api/treasury/balance` | Get treasury USDC balance |
+| `POST` | `/api/treasury/test` | Test treasury contract (x402 protected) |
 | `POST` | `/process` | A2A-compatible agent endpoint |
+| `POST` | `/test` | Test endpoint for development |
+| `GET` | `/validate-agent/:agentId` | Validate agent identity |
 | `POST` | `/facilitator/validate` | Validate payment proof |
 | `POST` | `/facilitator/verify` | Verify EIP-3009 signature |
 | `POST` | `/facilitator/settle` | Settle payment on-chain |
+| `GET` | `/facilitator/health` | Facilitator health check |
 
 See [API Reference](docs/API_REFERENCE.md) for complete documentation.
 

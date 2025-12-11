@@ -108,7 +108,8 @@ Get recent payroll execution history with Arweave receipts.
           "amount": "100.00",
           "currency": "USD",
           "recipient": "john@example.com",
-          "status": "PAID"
+          "status": "PAID",
+          "txHash": "0x..."
         }
       ]
     }
@@ -205,7 +206,8 @@ curl -X POST http://localhost:4000/api/payroll/execute \
       "id": "pmt_1",
       "recipient": "john@example.com",
       "amount": 100.00,
-      "status": "PAID"
+      "status": "PAID",
+      "txHash": "0x..."
     }
   ],
   "arweave": {
@@ -237,7 +239,8 @@ Get payroll details by ID.
       "recipient": "john@example.com",
       "amount": 100.00,
       "currency": "USD",
-      "status": "PAID"
+      "status": "PAID",
+      "txHash": "0x..."
     }
   ]
 }
@@ -249,27 +252,86 @@ Get payroll details by ID.
 
 #### `POST /api/payment/process`
 
-Process a single payment (Rail + on-chain).
+Process a single payment (Rail + on-chain). Complete flow from database creation to Rail API processing.
 
 **Protection:** x402
 
 **Request:**
 ```json
 {
-  "recipient": "john@example.com",
-  "amount": 100.00,
-  "currency": "USD"
+  "customer": {
+    "first_name": "John",
+    "last_name": "Doe",
+    "email_address": "john@example.com",
+    "telephone_number": "+1234567890",
+    "mailing_address": {
+      "address_line1": "123 Main St",
+      "city": "New York",
+      "state": "NY",
+      "postal_code": "10001",
+      "country_code": "US"
+    }
+  },
+  "payment": {
+    "amount": 10000,
+    "currency": "USD",
+    "recipient": "0x...",
+    "description": "Freelancer payment"
+  },
+  "rail": {
+    "source_account_id": "acc_xxx",
+    "counterparty_id": "cp_xxx",
+    "withdrawal_rail": "ACH"
+  }
 }
 ```
 
 **Response:**
 ```json
 {
-  "paymentId": "pmt_xxx",
+  "success": true,
+  "payrollId": "pay_xxx",
   "status": "PAID",
-  "recipient": "john@example.com",
-  "amount": 100.00,
-  "currency": "USD"
+  "steps": {
+    "payroll_created": true,
+    "payments_created": true,
+    "treasury_checked": true,
+    "onchain_requested": true,
+    "onchain_executed": true,
+    "rail_processed": true
+  },
+  "transactions": {
+    "request_tx_hashes": ["0x..."],
+    "execute_tx_hashes": ["0x..."]
+  },
+  "rail": {
+    "withdrawal_id": "wd_xxx",
+    "status": "SETTLED"
+  },
+  "errors": []
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "payrollId": "pay_xxx",
+  "status": "FAILED",
+  "steps": {
+    "payroll_created": true,
+    "payments_created": true,
+    "treasury_checked": false,
+    "onchain_requested": false,
+    "onchain_executed": false,
+    "rail_processed": false
+  },
+  "errors": [
+    {
+      "step": "treasury_checked",
+      "error": "Insufficient balance"
+    }
+  ]
 }
 ```
 
@@ -349,11 +411,62 @@ A2A-compatible endpoint for AI agent requests.
 }
 ```
 
+#### `POST /test`
+
+Test endpoint for development and debugging.
+
+**Request:**
+```json
+{
+  "text": "Test message"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "message": "Test endpoint working"
+}
+```
+
+#### `GET /validate-agent/:agentId`
+
+Validate agent identity and capabilities.
+
+**Parameters:**
+- `agentId` (string): Agent identifier
+
+**Response:**
+```json
+{
+  "valid": true,
+  "agentId": "snowrail-treasury-v1",
+  "identity": {
+    "name": "SnowRail Treasury Agent",
+    "capabilities": [...]
+  }
+}
+```
+
 ---
 
 ### x402 Facilitator Endpoints
 
 #### `GET /facilitator/health`
+
+Check facilitator health status.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "facilitator": "x402-snowrail",
+  "version": "1.0.0"
+}
+```
+
+#### `POST /facilitator/validate`
 
 Check facilitator health status.
 
@@ -450,13 +563,14 @@ Settle payment on-chain.
 Payroll and payment statuses follow this flow:
 
 ```
-PENDING → ONCHAIN_PAID → RAIL_PROCESSING → PAID
-                                   └──────→ FAILED
+PENDING → ONCHAIN_REQUESTED → ONCHAIN_PAID → RAIL_PROCESSING → PAID
+                                                      └──────→ FAILED
 ```
 
 | Status | Description |
 |--------|-------------|
 | `PENDING` | Payment created, awaiting processing |
+| `ONCHAIN_REQUESTED` | Payment request submitted to contract |
 | `ONCHAIN_PAID` | On-chain payment completed |
 | `RAIL_PROCESSING` | Rail API processing fiat payout |
 | `PAID` | Payment completed successfully |
@@ -497,6 +611,45 @@ All errors follow this format:
 | `PAYROLL_NOT_FOUND` | 404 | Payroll ID doesn't exist |
 | `INSUFFICIENT_BALANCE` | 400 | Treasury has insufficient funds |
 | `CONTRACT_ERROR` | 500 | Smart contract interaction failed |
+| `RAIL_API_ERROR` | 500 | Rail API request failed |
+
+---
+
+## Data Models
+
+### OutboundPayment
+
+Individual payment within a payroll.
+
+```typescript
+{
+  id: string;
+  payrollId: string;
+  amount: number;        // Amount in cents
+  currency: string;      // USD, etc.
+  status: string;        // PENDING, ONCHAIN_PAID, RAIL_PROCESSING, PAID, FAILED
+  recipient: string;     // Wallet address or identifier
+  txHash: string | null; // Blockchain transaction hash (0x...)
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Payroll
+
+Batch of payments.
+
+```typescript
+{
+  id: string;
+  total: number;         // Total amount in cents
+  currency: string;     // USD, etc.
+  status: string;        // PENDING, ONCHAIN_PAID, RAIL_PROCESSING, PAID, FAILED
+  payments: OutboundPayment[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
 
 ---
 
